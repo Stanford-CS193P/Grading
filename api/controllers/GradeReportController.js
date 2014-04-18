@@ -358,7 +358,7 @@ module.exports = {
           };
         });
 
-        res.view({lateDays:lateDays, assignment:assignment, grader:grader});
+        res.view({ lateDays:lateDays, assignment:assignment, grader:grader });
       });
   },
 
