@@ -1,0 +1,302 @@
+<div>
+  <h1>Grader: <%= grader %></h1>
+  <h1>Assignment: <%= assignment %></h1>
+
+  <table>
+    <tr>
+      <td>
+        <span class="saving" style="display:none">Saving...</span>
+        <span class="saved" style="display:none">Saved!</span>
+      </td>
+    
+      <td>
+        <select id="students">
+          <% _.each(reports, function (report) { %>
+            <option data-reportID="<%= report.id %>"><%= report.gradedForSunetid %></option>
+          <% }) %>
+        </select>
+        <button id="add_student">+</button>
+      </td>
+    </tr>
+
+    <tr>
+      <td><b>Late Days</b></td>
+      <td><input class="late-day" type="text"></input></td>
+    </tr>
+
+    <tr>
+      <td><b>Grade</b></td>
+      <td>
+        <select class="grade">
+          <option selected value="todo">TODO</option>
+          <option>Check</option>
+          <option>Check/Check+</option>
+          <option>Check+</option>
+          <option>Check/Check-</option>
+          <option>Check-</option>
+        </select>
+      </td>
+    </tr>
+
+    <tr><td><b>Required Tasks</b></td></tr>
+    <% _.each(requiredTasks, function (comment) { %>
+      <tr class="comment" data-id="<%= comment.id %>" data-type="REQUIRED_TASK">
+        <td><%= comment.text %></td>
+        <td>
+          <select>
+            <option selected value="0">TODO</option>
+            <option value="1">+</option>
+            <option value="-1">-</option>
+          </select>
+        </td>
+      </tr>
+    <% }) %>
+
+    <tr><td><b>Evaluation</b></td></tr>
+    <% _.each(evaluation, function (comment) { %>
+      <tr class="comment" data-id="<%= comment.id %>" data-type="EVALUATION">
+        <td><%= comment.text %></td>
+        <td>
+          <select>
+            <option selected value="1">+</option>
+            <option value="-1">-</option>
+          </select>
+        </td>
+      </tr>
+    <% }) %>
+
+    <tr><td><b>Extra Credit</b></td></tr>
+    <% _.each(extraCredit, function (comment) { %>
+      <tr class="comment" data-id="<%= comment.id %>" data-type="EXTRA_CREDIT">
+        <td><%= comment.text %></td>
+        <td>
+          <select>
+            <option value="1">+</option>
+            <option selected value="-1">-</option>
+          </select>
+        </td>
+      </tr>
+    <% }) %>
+
+    <tr><td><b>Other Comments</b></td></tr>
+    <% _.each(other, function (comment) { %>
+      <tr class="comment" data-id="<%= comment.id %>" data-type="OTHER">
+        <td>
+          <p class="comment-text"><%= comment.text %></p>
+          <br/>
+          <button class="edit-comment">Edit Comment</button>
+        </td>
+        <td>
+          <select>
+            <option value="1">Comment Applies</option>
+            <option selected value="-1">Comment Doesn't Apply</option>
+          </select>
+        </td>
+      </tr>
+    <% }) %>
+    <tr id="new-comment-row">
+      <td>
+        <textarea rows="10" cols="30" id="new-comment"></textarea><br/>
+        <button id="add-comment">Add Comment</button>
+      </td>
+    </tr>
+
+  </table>
+</div>
+
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
+<script>
+
+function loadGradeReport() {
+  var sunetid = $("#students option:selected").text();
+  socket.get("/gradereport/findByAssignmentAndGradedForSunetid", {
+        assignment: <%= assignment %>,
+        gradedForSunetid: sunetid
+      }, function(response) {
+        console.log("loaded grade report", response);
+
+        if (response.lateDayCount) {
+          $(".late-day").val(response.lateDayCount);
+        } else{
+          $(".late-day").val("");
+        }
+
+        $(".grade option").removeAttr("selected");
+        if (response.grade) {
+          var optToSelect = null;
+          $(".grade option").each(function() {
+            if ($(this).text() === response.grade) {
+              optToSelect = $(this);
+            }
+          });
+          if (optToSelect) optToSelect.attr("selected", "selected");
+          else alert("Grade " + response.grade + " not found as an option");
+        } else {
+          $(".grade option[value=todo]").attr("selected", "selected");
+        }
+
+        if (response.comments && response.comments.length) {
+          _.each(response.comments, function(comment) {
+            var elem = $('tr[data-id="'+comment.id+'"]');
+            elem.find("option").removeAttr("selected");
+            elem.find('option[value="'+comment.value+'"]').attr("selected", "selected");
+          });
+        } else {
+          $(".comment").each(function() {
+            var elem = $(this);
+            var commentType = elem.attr("data-type");
+            elem.find("option").removeAttr("selected");
+            if (commentType === "REQUIRED_TASK") {
+              elem.find('option[value="0"]').attr("selected", "selected");
+            }
+            if (commentType === "EVALUATION") {
+              elem.find('option[value="1"]').attr("selected", "selected");
+            }
+            if (commentType === "EXTRA_CREDIT") {
+              elem.find('option[value="-1"]').attr("selected", "selected");
+            }
+            if (commentType === "OTHER") {
+              elem.find('option[value="-1"]').attr("selected", "selected");
+            }
+          });
+        }
+      });
+}
+
+function saveGradeReport() {
+  $(".saving").show();
+  $(".saved").hide();
+
+  var selected = $("#students option:selected");
+  var reportID = selected.attr("data-reportID");
+  var sunetid = selected.text();
+
+  var lateDayCount = $(".late-day").val();
+  var grade = $(".grade option:selected").text();
+
+  var comments = [];
+  $(".comment").each(function() {
+    var commentID = $(this).attr("data-id");
+    var commentValue = $(this).find("select option:selected").val();
+    comments.push({
+      id: commentID,
+      value: commentValue
+    });
+  });
+  console.log(comments);
+
+  socket.put("/gradereport/"+reportID, {
+        lateDayCount: lateDayCount,
+        grade: grade,
+        comments: comments
+      }, function(response) {
+        console.log(response);
+        $(".saving").hide();
+        $(".saved").show();
+      });
+}
+
+$(function() {
+  loadGradeReport();
+
+  $("#add_student").click(function() {
+    var sunetid = prompt("Please enter new student's sunetid...");
+    if (sunetid) {
+      socket.post("/gradereport/create", {
+          gradedBySunetid: "<%= grader %>",
+          gradedForSunetid: sunetid,
+          assignment: <%= assignment %>
+        }, function (response) {
+          console.log(response);
+
+          var opt = $("<option>").text(sunetid).attr("data-reportID", response.id);
+          $("#students").append(opt);
+          $("#students options").removeAttr("selected");
+          opt.attr("selected", "selected");
+          loadGradeReport();
+        });
+    }
+  });
+
+  $("input").keyup(function() {
+    saveGradeReport();
+  });
+  $("select").change(function() {
+    var selID = $(this).attr("id");
+    if (selID === "students") {
+      loadGradeReport();
+      return;
+    }
+    saveGradeReport();
+  });
+
+  $("#add-comment").click(function() {
+      var elem = $("#new-comment");
+      var commentText = elem.val();
+      elem.val("");
+
+      socket.post("/comment", {
+        assignment: <%= assignment %>,
+        type:"OTHER",
+        text: commentText
+        }, function(response) {
+          console.log(response);
+
+          var commentRow = $("<tr/>")
+            .addClass("comment")
+            .attr("data-id", response.id)
+            .attr("data-type", response.type);
+          commentRow.append($("<td/>").html(
+            response.text + '<br/><br/><button class="edit-comment">Edit Comment</button>'));
+          commentRow.append($("<td/>")
+            .append($("<select/>")
+                .append($("<option/>").val("1").text("Comment Applies"))
+                .append($("<option/>").val("-1").text("Comment Doesn't Apply")
+                          .attr("selected","selected"))
+            ));
+          $("#new-comment-row").before(commentRow);
+        });
+  });
+
+  $(".edit-comment").click(function() {
+    var elem = $(this);
+    elem.hide();
+    var commentElem = elem.parents(".comment");
+    var commentID = commentElem.attr("data-id");
+  
+    var commentTextElem = elem.siblings(".comment-text");
+    var commentText = commentTextElem.text();
+    var textarea = $("<textarea/>").attr("columns", "30").attr("rows", "10");
+    textarea.val(commentText);
+    commentTextElem.empty();
+    commentTextElem.append(textarea).append($("<br/>"));
+    var doneButton = $("<button/>").text("Done");
+    var cancelButton = $("<button/>").text("Cancel");
+    commentTextElem.append(doneButton);
+    commentTextElem.append(cancelButton);
+
+    cancelButton.click(function() {
+      commentTextElem.empty();
+      commentTextElem.text(commentText);
+      elem.show();
+    });
+
+    doneButton.click(function() {
+      var newCommentText = textarea.val();
+      commentTextElem.empty();
+      commentTextElem.text(newCommentText);
+      elem.show();
+
+      console.log(commentID);
+      socket.put("/comment/"+commentID, {
+          text: newCommentText
+        }, function(response){
+          console.log(response);
+        });
+    });
+
+  });
+});
+</script>
+
