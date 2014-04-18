@@ -15,7 +15,7 @@ module.exports = {
     lateDayCount: "int",
     grade: "string",
     comments: "array",
-    isEmailSent: "bool"
+    isEmailSent: "boolean"
   }
 
 };
