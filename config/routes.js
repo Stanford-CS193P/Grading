@@ -41,6 +41,11 @@ module.exports.routes = {
     action: 'showGradeReportsForAssignmentAndGrader'
   },
 
+  '/gradereport/gen/:assignment/:grader': {
+    controller: 'GradeReport',
+    action: 'generateGradeReportsForAssignmentAndGrader'
+  },
+
   '/comment/:assignment': {
     controller: 'Comment',
     action: 'readForAssignment'
