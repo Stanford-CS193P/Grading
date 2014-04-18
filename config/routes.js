@@ -46,6 +46,11 @@ module.exports.routes = {
     action: 'generateGradeReportsForAssignmentAndGrader'
   },
 
+  '/gradereport_email/:assignment': {
+    controller: 'GradeReport',
+    action: 'genEmailsForAssignment'
+  },
+
   '/comment/:assignment': {
     controller: 'Comment',
     action: 'readForAssignment'

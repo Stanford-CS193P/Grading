@@ -14,7 +14,8 @@ module.exports = {
     gradedForSunetid: "string",
     lateDayCount: "int",
     grade: "string",
-    comments: "array"
+    comments: "array",
+    isEmailSent: "bool"
   }
 
 };
