@@ -218,7 +218,7 @@
       "click #add-student": "addStudent",
       "click .edit-comment": "editComment",
       "click .edit-comment-done": "editCommentDone",
-      "click .edit-comment-cancel": "editCommentCancel",
+      "click .edit-comment-cancel": "editCommentCancel"
     },
     saveGradeReport: function(event) {
       this.$saveIndicator.text("Saving...");
@@ -302,7 +302,7 @@
       var commentID = commentElem.attr("data-id");
       var newCommentText = commentElem.find("textarea").val();
 
-      socket.put("/comment/"+commentID, { text: newCommentText },
+      socket.put("/comment/update/"+commentID, { text: newCommentText },
           _.bind(function(response){
             console.log(response);
 
@@ -314,6 +314,7 @@
                 break;
               }
             }
+            if (!comment) return;
             var otherCommentsTpl = _.template($("#comment_other_tpl").html());
             commentElem.replaceWith(otherCommentsTpl(comment));
           }, this));

@@ -41,12 +41,12 @@ module.exports.routes = {
     action: 'showGradeReportsForAssignmentAndGrader'
   },
 
-  '/gradereport/gen/:assignment/:grader': {
+  '/gengradereport/:assignment/:grader': {
     controller: 'GradeReport',
     action: 'generateGradeReportsForAssignmentAndGrader'
   },
 
-  '/gradereport_email/:assignment': {
+  '/emails/:assignment': {
     controller: 'GradeReport',
     action: 'genEmailsForAssignment'
   },
