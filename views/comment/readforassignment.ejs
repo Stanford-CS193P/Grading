@@ -1,0 +1,82 @@
+<h1>Comments for assignment <%= assignment %></h1>
+
+<table style="float:right">
+  <tr>
+    <td>NEW Type</td>
+    <td>NEW Text</td>
+  </tr>
+  <tr class="new-comment">
+    <td>
+      <select>
+        <option>REQUIRED_TASK</option>
+        <option>EVALUATION</option>
+        <option>EXTRA_CREDIT</option>
+        <option>OTHER</option>
+      </select>
+    </td>
+    <td><textarea cols="20" rows="10"></textarea><button class="add">Add</button></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td>Type</td>
+    <td>Text</td>
+  </tr>
+
+  <% _.each(comments, function(comment) { %>
+  <tr class="comment" data-id="<%= comment.id %>">
+    <td>
+      <select>
+        <option <%= comment.type === "REQUIRED_TASK" ? "selected" : "" %>>REQUIRED_TASK</option>
+        <option <%= comment.type === "EVALUATION" ? "selected" : "" %>>EVALUATION</option>
+        <option <%= comment.type === "EXTRA_CREDIT" ? "selected" : "" %>>EXTRA_CREDIT</option>
+        <option <%= comment.type === "OTHER" ? "selected" : "" %>>OTHER</option>
+      </select>
+    </td>
+    <td><textarea cols="40" rows="10"><%= comment.text %></textarea></td>
+  </tr>
+  <% }); %>
+</table>
+
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js"></script>
+<script>
+$(function() {
+    $("select").change(function() {
+      var selected = $(this).find("option:selected").val();
+      var commentElem = $(this).parents(".comment");
+      var commentID = commentElem.attr("data-id");
+      if (!commentID) return;
+      socket.put("/comment/update/"+commentID, { type: selected }, function(response) {
+        console.log(response);
+      });
+    });
+
+    $("textarea").keyup(function() {
+      var newText = $(this).val();
+      var commentElem = $(this).parents(".comment");
+      var commentID = commentElem.attr("data-id");
+      if (!commentID) return;
+      socket.put("/comment/update/"+commentID, { text: newText }, function(response) {
+        console.log(response);
+      });
+    });
+
+    $("button.add").click(function() {
+      var commentElem = $(".new-comment");
+      var text = commentElem.find("textarea").val();
+      var type = commentElem.find("select option:selected").val();
+      console.log(type, text);
+      socket.post("/comment", {
+        assignment: <%= assignment %>,
+        type:type,
+        text:text
+      }, function(response) {
+        console.log(response);
+        location.reload();
+      });
+    });
+});
+</script>

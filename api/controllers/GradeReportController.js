@@ -34,47 +34,13 @@ module.exports = {
           .done(function(err, comments) {
             if (err) return res.send(err, 500);
 
-            // reports = _.map(reports, function(report) {
-            //   return report.toJSON();
-            // });
-
-            // var requiredTasks = _.filter(comments, function(comment) {
-            //   return comment.type === "REQUIRED_TASK";
-            // });
-            // var evaluation = _.filter(comments, function(comment) {
-            //   return comment.type === "EVALUATION";
-            // });
-            // var extraCredit = _.filter(comments, function(comment) {
-            //   return comment.type === "EXTRA_CREDIT";
-            // });
-            // var other = _.filter(comments, function(comment) {
-            //   return comment.type === "OTHER";
-            // });
-
             return res.view({
               grader: grader,
               assignment: assignment,
               reports: reports,
               comments: comments
-              // Comments...
-              // requiredTasks: requiredTasks,
-              // evaluation: evaluation,
-              // extraCredit: extraCredit,
-              // other: other
             });
           });
-      });
-  },
-
-  findByAssignmentAndGradedForSunetid: function(req, res) {
-    var assignment = req.param("assignment");
-    var gradedForSunetid = req.param("gradedForSunetid");
-    GradeReport.find()
-      .where({ assignment: assignment, gradedForSunetid: gradedForSunetid })
-      .done(function(err, report) {
-        if (err) return res.send(err, 500);
-        if (report.length == 1) return res.json(report[0])
-        return res.json(null);
       });
   },
 

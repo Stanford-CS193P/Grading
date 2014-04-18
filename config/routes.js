@@ -39,7 +39,12 @@ module.exports.routes = {
   '/gradereport/:assignment/:grader': {
     controller: 'GradeReport',
     action: 'showGradeReportsForAssignmentAndGrader'
-  }
+  },
+
+  '/comment/:assignment': {
+    controller: 'Comment',
+    action: 'readForAssignment'
+  },
 
   /*
   // But what if you want your home page to display
