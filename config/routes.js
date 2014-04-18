@@ -51,10 +51,15 @@ module.exports.routes = {
     action: 'genEmailsForAssignment'
   },
 
+  '/overview/:assignment': {
+    controller: 'GradeReport',
+    action: 'showOverview'
+  },
+
   '/comment/:assignment': {
     controller: 'Comment',
     action: 'readForAssignment'
-  },
+  }
 
   /*
   // But what if you want your home page to display

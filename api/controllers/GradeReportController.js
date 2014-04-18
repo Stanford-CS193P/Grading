@@ -253,7 +253,88 @@ module.exports = {
   },
 
   showOverview: function(req, res) {
+    var assignment = req.param("assignment");
 
+    GradeReport.find()
+      .where({assignment: assignment})
+      .sort("gradedBySunetid")
+      .sort("gradedForSunetid")
+      .done(function(err, reports) {
+        if (err) return res.send(err, 500);
+
+        Comment.find()
+          .where({ assignment: assignment })
+          .sort("createdAt")
+          .done(function(err, comments) {
+            if (err) return res.send(err, 500);
+
+            var reportsFormatted = [];
+            _.each(reports, function(report) {
+              var curReportData = {
+                gradedBySunetid: report.gradedBySunetid,
+                gradedForSunetid: report.gradedForSunetid,
+                lateDayCount: report.lateDayCount,
+                grade: report.grade
+              };
+
+              var requiredTasks = [];
+              var evaluation = [];
+              var extraCredit = [];
+              var otherComments = [];
+
+              _.each(comments, function(comment) {
+                var value = _.findWhere(report.comments, {id: comment.id});
+                if (!value) return;
+                value = value.value;
+
+                if (comment.type === "REQUIRED_TASK") {
+                  if (value === "-1") {
+                    requiredTasks.push(comment.text);
+                  }
+                }
+                if (comment.type === "EVALUATION") {
+                  if (value === "-1") {
+                    evaluation.push(comment.text);
+                  }
+                }
+                if (comment.type === "EXTRA_CREDIT") {
+                  if (value === "1") {
+                    extraCredit.push(comment.text);
+                  }
+                }
+                if (comment.type === "OTHER") {
+                  if (value === "1") {
+                    otherComments.push(comment.text);
+                  }
+                }
+              });
+
+              curReportData.missingRequiredTasks = "";
+              if (requiredTasks.length > 0) {
+                curReportData.missingRequiredTasks = "* " + requiredTasks.join("\n* ");
+              }
+
+              curReportData.evaluation = "";
+              if (evaluation.length > 0) {
+                curReportData.evaluation = "* " + evaluation.join("\n* ");
+              }
+
+              curReportData.extraCredit = "";
+              if (extraCredit.length > 0) {
+                curReportData.extraCredit = "* " + extraCredit.join("\n* ");
+              }
+
+              curReportData.otherComments = "";
+              if (otherComments.length > 0) {
+                curReportData.otherComments = "* " + otherComments.join("\n* ");
+              }
+
+              reportsFormatted.push(curReportData);
+            });
+
+            res.view({ reports: reportsFormatted, assignment: assignment });
+          });
+      });
   },
 
   /**
