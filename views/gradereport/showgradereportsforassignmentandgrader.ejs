@@ -1,21 +1,24 @@
 <div>
-  <h1>Grader: <%= grader %></h1>
-  <h1>Assignment: <%= assignment %></h1>
+  <h1>Grader: <%= grader %> | Assignment: <%= assignment %></h1>
+  <div id="grade-report"></div>
+</div>
 
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js"></script>
+
+<script type="text/template" id="grade_report_tpl">
   <table>
     <tr>
-      <td>
-        <span class="saving" style="display:none">Saving...</span>
-        <span class="saved" style="display:none">Saved!</span>
-      </td>
-    
+      <td><span class="save-indicator"></span></td>
+
       <td>
         <select id="students">
-          <% _.each(reports, function (report) { %>
-            <option data-reportID="<%= report.id %>"><%= report.gradedForSunetid %></option>
-          <% }) %>
+          {[ _.each(reports, function (report) { ]}
+            <option data-reportID="{{ report.id }}">{{ report.gradedForSunetid }}</option>
+          {[ }) ]}
         </select>
-        <button id="add_student">+</button>
+        <button id="add-student">+</button>
       </td>
     </tr>
 
@@ -39,61 +42,17 @@
     </tr>
 
     <tr><td><b>Required Tasks</b></td></tr>
-    <% _.each(requiredTasks, function (comment) { %>
-      <tr class="comment" data-id="<%= comment.id %>" data-type="REQUIRED_TASK">
-        <td><%= comment.text %></td>
-        <td>
-          <select>
-            <option selected value="0">TODO</option>
-            <option value="1">+</option>
-            <option value="-1">-</option>
-          </select>
-        </td>
-      </tr>
-    <% }) %>
+    <tr class="required-task" style="display:none"></tr>
 
     <tr><td><b>Evaluation</b></td></tr>
-    <% _.each(evaluation, function (comment) { %>
-      <tr class="comment" data-id="<%= comment.id %>" data-type="EVALUATION">
-        <td><%= comment.text %></td>
-        <td>
-          <select>
-            <option selected value="1">+</option>
-            <option value="-1">-</option>
-          </select>
-        </td>
-      </tr>
-    <% }) %>
+    <tr class="evaluation" style="display:none"></tr>
 
     <tr><td><b>Extra Credit</b></td></tr>
-    <% _.each(extraCredit, function (comment) { %>
-      <tr class="comment" data-id="<%= comment.id %>" data-type="EXTRA_CREDIT">
-        <td><%= comment.text %></td>
-        <td>
-          <select>
-            <option value="1">+</option>
-            <option selected value="-1">-</option>
-          </select>
-        </td>
-      </tr>
-    <% }) %>
+    <tr class="extra-credit" style="display:none"></tr>
 
     <tr><td><b>Other Comments</b></td></tr>
-    <% _.each(other, function (comment) { %>
-      <tr class="comment" data-id="<%= comment.id %>" data-type="OTHER">
-        <td>
-          <p class="comment-text"><%= comment.text %></p>
-          <br/>
-          <button class="edit-comment">Edit Comment</button>
-        </td>
-        <td>
-          <select>
-            <option value="1">Comment Applies</option>
-            <option selected value="-1">Comment Doesn't Apply</option>
-          </select>
-        </td>
-      </tr>
-    <% }) %>
+    <tr class="other-comments" style="display:none"></tr>
+
     <tr id="new-comment-row">
       <td>
         <textarea rows="10" cols="30" id="new-comment"></textarea><br/>
@@ -102,136 +61,216 @@
     </tr>
 
   </table>
-</div>
+</script>
 
-<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
-<script>
+<script type="text/template" id="comment_required_task_tpl">
+<tr class="comment" data-id="{{ id }}" data-type="REQUIRED_TASK">
+  <td>{{ text }}</td>
+  <td>
+    <input type="radio" name="{{ id }}" value="1"> +
+    <br>
+    <input type="radio" name="{{ id }}" value="-1"> -
+  </td>
+</tr>
+</script>
 
-function loadGradeReport() {
-  var sunetid = $("#students option:selected").text();
-  socket.get("/gradereport/findByAssignmentAndGradedForSunetid", {
-        assignment: <%= assignment %>,
-        gradedForSunetid: sunetid
-      }, function(response) {
-        console.log("loaded grade report", response);
+<script type="text/template" id="comment_evaluation_tpl">
+<tr class="comment" data-id="{{ id }}" data-type="EVALUATION">
+  <td>{{ text }}</td>
+  <td>
+    <input type="radio" name="{{ id }}" value="1"> +
+    <br>
+    <input type="radio" name="{{ id }}" value="-1"> -
+  </td>
+</tr>
+</script>
 
-        if (response.lateDayCount) {
-          $(".late-day").val(response.lateDayCount);
-        } else{
-          $(".late-day").val("");
+<script type="text/template" id="comment_extra_credit_tpl">
+<tr class="comment" data-id="{{ id }}" data-type="EXTRA_CREDIT">
+  <td>{{ text }}</td>
+  <td>
+    <input type="radio" name="{{ id }}" value="1"> +
+    <br>
+    <input type="radio" name="{{ id }}" value="-1"> -
+  </td>
+</tr>
+</script>
+
+<script type="text/template" id="comment_other_tpl">
+<tr class="comment" data-id="{{ id }}" data-type="OTHER">
+  <td>
+    <p>{{ text }}</p>
+    <br>
+    <button class="edit-comment">Edit Comment</button>
+  </td>
+  <td>
+    <input type="checkbox" name="{{ id }}" value="1"> Applies
+  </td>
+</tr>
+</script>
+
+<script type="text/template" id="comment_other_edit_tpl">
+<tr class="comment" data-id="{{ id }}" data-type="OTHER">
+  <td>
+    <textarea cols="30" rows="10">{{ text }}</textarea>
+    <br><br>
+    <button class="edit-comment-cancel">Cancel</button>
+    <button class="edit-comment-done">Done</button>
+  </td>
+  <td>
+    <input type="checkbox" name="{{ id }}" value="1"> Applies
+  </td>
+</tr>
+</script>
+
+<script type="text/javascript">
+  _.templateSettings = {
+    interpolate: /\{\{(.+?)\}\}/g,
+    evaluate: /\{\[(.+?)\]\}/g
+  };
+
+  GradeReportView = Backbone.View.extend({
+    initialize: function(args){
+      this.gradeReports = args.gradeReports;
+      this.comments = args.comments;
+      this.render();
+    },
+    render: function(){
+      var variables = {reports: this.gradeReports};
+      var template = _.template($("#grade_report_tpl").html(), variables);
+      this.$el.html(template);
+
+      this.$students = this.$el.find("#students");
+      this.$saveIndicator = this.$el.find(".save-indicator");
+
+      this.renderSelectedReport();
+    },
+    renderSelectedReport: function() {
+      this.$el.find(".comment").remove();
+      this.$el.find(".late-day").val("");
+      this.$el.find(".grade option[value='todo']").attr("selected", "selected");
+
+      var $requiredTasks = this.$el.find(".required-task");
+      var $evaluation = this.$el.find(".evaluation");
+      var $extraCredit = this.$el.find(".extra-credit");
+      var $otherComments = this.$el.find(".other-comments");
+
+      var requiredTasksTpl = _.template($("#comment_required_task_tpl").html());
+      var evaluationTpl    = _.template($("#comment_evaluation_tpl").html());
+      var extraCreditTpl   = _.template($("#comment_extra_credit_tpl").html());
+      var otherCommentsTpl = _.template($("#comment_other_tpl").html());
+
+      _.each(this.comments, function(comment) {
+        if (comment.type === "REQUIRED_TASK") {
+          $requiredTasks.before(requiredTasksTpl(comment));
         }
-
-        $(".grade option").removeAttr("selected");
-        if (response.grade) {
-          var optToSelect = null;
-          $(".grade option").each(function() {
-            if ($(this).text() === response.grade) {
-              optToSelect = $(this);
-            }
-          });
-          if (optToSelect) optToSelect.attr("selected", "selected");
-          else alert("Grade " + response.grade + " not found as an option");
-        } else {
-          $(".grade option[value=todo]").attr("selected", "selected");
+        if (comment.type === "EVALUATION") {
+          $evaluation.before(evaluationTpl(comment));
         }
-
-        if (response.comments && response.comments.length) {
-          _.each(response.comments, function(comment) {
-            var elem = $('tr[data-id="'+comment.id+'"]');
-            elem.find("option").removeAttr("selected");
-            elem.find('option[value="'+comment.value+'"]').attr("selected", "selected");
-          });
-        } else {
-          $(".comment").each(function() {
-            var elem = $(this);
-            var commentType = elem.attr("data-type");
-            elem.find("option").removeAttr("selected");
-            if (commentType === "REQUIRED_TASK") {
-              elem.find('option[value="0"]').attr("selected", "selected");
-            }
-            if (commentType === "EVALUATION") {
-              elem.find('option[value="1"]').attr("selected", "selected");
-            }
-            if (commentType === "EXTRA_CREDIT") {
-              elem.find('option[value="-1"]').attr("selected", "selected");
-            }
-            if (commentType === "OTHER") {
-              elem.find('option[value="-1"]').attr("selected", "selected");
-            }
-          });
+        if (comment.type === "EXTRA_CREDIT") {
+          $extraCredit.before(extraCreditTpl(comment));
         }
+        if (comment.type === "OTHER") {
+          $otherComments.before(otherCommentsTpl(comment));
+        }
+      }, this);
+
+      var selectedGradeReportID = this.$students.find("option:selected").attr("data-reportID");
+      var selectedGradeReport = _.findWhere(this.gradeReports, {id:selectedGradeReportID});
+      console.log(selectedGradeReport);
+      if (!selectedGradeReport) return;
+
+      if (selectedGradeReport.lateDayCount !== undefined) {
+        this.$el.find(".late-day").val(selectedGradeReport.lateDayCount);
+      }
+
+      if (selectedGradeReport.grade) {
+        this.$el.find(".grade option").removeAttr("selected");
+        var optToSelect = null;
+        this.$el.find(".grade option").each(function() {
+          if ($(this).text() === selectedGradeReport.grade) {
+            optToSelect = $(this);
+          }
+        });
+        if (optToSelect) optToSelect.attr("selected", "selected");
+        else alert("Grade " + selectedGradeReport.grade + " not found as an option");
+      }
+
+      _.each(selectedGradeReport.comments, function(comment) {
+        if (!comment.value) return;
+        var elem = this.$el.find('tr[data-id="'+comment.id+'"]');
+        elem.find("option").removeAttr("selected");
+        elem.find("input").removeAttr("checked");
+        elem.find("input[type=checkbox]").prop("checked", false)
+        elem.find('option[value="'+comment.value+'"]').attr("selected", "selected");
+        elem.find('input[value="'+comment.value+'"]').prop("checked", true);
+      }, this);
+    },
+    events: {
+      "keyup input[type=text]": "saveGradeReport",
+      "change .grade": "saveGradeReport",
+      "change .comment select": "saveGradeReport",
+      "change .comment input[type=checkbox]": "saveGradeReport",
+      "click  .comment input[type=radio]": "saveGradeReport",
+
+      "change #students": "loadGradeReport",
+      "click #add-comment": "addComment",
+      "click #add-student": "addStudent",
+      "click .edit-comment": "editComment",
+      "click .edit-comment-done": "editCommentDone",
+      "click .edit-comment-cancel": "editCommentCancel",
+    },
+    saveGradeReport: function(event) {
+      this.$saveIndicator.text("Saving...");
+
+      var selectedGradeReportID = this.$students.find("option:selected").attr("data-reportID");
+      var selectedGradeReportSunetid = this.$students.find("option:selected").text();
+
+      var data = {};
+      data.lateDayCount = this.$el.find(".late-day").val();
+      data.grade = this.$el.find(".grade option:selected").text();
+
+      var comments = [];
+      $(".comment").each(function() {
+        var commentID = $(this).attr("data-id");
+        var commentValue = $(this).find("select option:selected").val();
+        if (!commentValue)
+          commentValue = $(this).find("input:checked").val();
+        if (!commentValue)
+          commentValue = $(this).find("input[type=checkbox]").prop("checked") ? "1" : "0";
+
+        comments.push({
+          id: commentID,
+          value: commentValue
+        });
       });
-}
+      data.comments = comments;
 
-function saveGradeReport() {
-  $(".saving").show();
-  $(".saved").hide();
+      console.log(data);
 
-  var selected = $("#students option:selected");
-  var reportID = selected.attr("data-reportID");
-  var sunetid = selected.text();
-
-  var lateDayCount = $(".late-day").val();
-  var grade = $(".grade option:selected").text();
-
-  var comments = [];
-  $(".comment").each(function() {
-    var commentID = $(this).attr("data-id");
-    var commentValue = $(this).find("select option:selected").val();
-    comments.push({
-      id: commentID,
-      value: commentValue
-    });
-  });
-  console.log(comments);
-
-  socket.put("/gradereport/"+reportID, {
-        lateDayCount: lateDayCount,
-        grade: grade,
-        comments: comments
-      }, function(response) {
-        console.log(response);
-        $(".saving").hide();
-        $(".saved").show();
-      });
-}
-
-$(function() {
-  loadGradeReport();
-
-  $("#add_student").click(function() {
-    var sunetid = prompt("Please enter new student's sunetid...");
-    if (sunetid) {
-      socket.post("/gradereport/create", {
-          gradedBySunetid: "<%= grader %>",
-          gradedForSunetid: sunetid,
-          assignment: <%= assignment %>
-        }, function (response) {
+      socket.put("/gradereport/"+selectedGradeReportID, data,
+        _.bind(function(response) {
           console.log(response);
 
-          var opt = $("<option>").text(sunetid).attr("data-reportID", response.id);
-          $("#students").append(opt);
-          $("#students options").removeAttr("selected");
-          opt.attr("selected", "selected");
-          loadGradeReport();
-        });
-    }
-  });
+          if (!response) {
+            this.$saveIndicator.text("Error");
+            return;
+          }
 
-  $("input").keyup(function() {
-    saveGradeReport();
-  });
-  $("select").change(function() {
-    var selID = $(this).attr("id");
-    if (selID === "students") {
-      loadGradeReport();
-      return;
-    }
-    saveGradeReport();
-  });
+          for (var i = 0; i < this.gradeReports.length; i++) {
+            if (this.gradeReports[i].id == response.id) {
+              this.gradeReports[i] = response;
+              break;
+            }
+          }
 
-  $("#add-comment").click(function() {
+          this.$saveIndicator.text("Saved!");
+        }, this));
+    },
+    loadGradeReport: function() {
+      this.renderSelectedReport();
+    },
+    addComment: function() {
       var elem = $("#new-comment");
       var commentText = elem.val();
       elem.val("");
@@ -240,63 +279,79 @@ $(function() {
         assignment: <%= assignment %>,
         type:"OTHER",
         text: commentText
-        }, function(response) {
+        }, _.bind(function(response) {
           console.log(response);
 
-          var commentRow = $("<tr/>")
-            .addClass("comment")
-            .attr("data-id", response.id)
-            .attr("data-type", response.type);
-          commentRow.append($("<td/>").html(
-            response.text + '<br/><br/><button class="edit-comment">Edit Comment</button>'));
-          commentRow.append($("<td/>")
-            .append($("<select/>")
-                .append($("<option/>").val("1").text("Comment Applies"))
-                .append($("<option/>").val("-1").text("Comment Doesn't Apply")
-                          .attr("selected","selected"))
-            ));
-          $("#new-comment-row").before(commentRow);
-        });
+          var $otherComments = this.$el.find(".other-comments");
+          var otherCommentsTpl = _.template($("#comment_other_tpl").html());
+          $otherComments.before(otherCommentsTpl(response));
+          this.comments.push(response);
+        }, this));
+    },
+    editComment: function(event) {
+      var elem = $(event.target || event.currentTarget);
+      var commentElem = elem.parents(".comment");
+      var commentID = commentElem.attr("data-id");
+      var comment = _.findWhere(this.comments, {id:commentID});
+      var otherCommentsEditTpl = _.template($("#comment_other_edit_tpl").html());
+      commentElem.replaceWith(otherCommentsEditTpl(comment));
+    },
+    editCommentDone: function(event) {
+      var elem = $(event.target || event.currentTarget);
+      var commentElem = elem.parents(".comment");
+      var commentID = commentElem.attr("data-id");
+      var newCommentText = commentElem.find("textarea").val();
+
+      socket.put("/comment/"+commentID, { text: newCommentText },
+          _.bind(function(response){
+            console.log(response);
+
+            var comment;
+            for (var i = 0; i < this.comments.length; i++) {
+              if (this.comments[i].id === response.id) {
+                this.comments[i] = response;
+                comment = this.comments[i];
+                break;
+              }
+            }
+            var otherCommentsTpl = _.template($("#comment_other_tpl").html());
+            commentElem.replaceWith(otherCommentsTpl(comment));
+          }, this));
+    },
+    editCommentCancel: function(event) {
+      var elem = $(event.target || event.currentTarget);
+      var commentElem = elem.parents(".comment");
+      var commentID = commentElem.attr("data-id");
+      var comment = _.findWhere(this.comments, {id:commentID});
+      var otherCommentsTpl = _.template($("#comment_other_tpl").html());
+      commentElem.replaceWith(otherCommentsTpl(comment));
+    },
+    addStudent: function() {
+      var sunetid = prompt("Please enter new student's sunetid...");
+      if (sunetid) {
+        socket.post("/gradereport/create", {
+            gradedBySunetid: "<%= grader %>",
+            gradedForSunetid: sunetid,
+            assignment: <%= assignment %>
+          }, _.bind(function (response) {
+            console.log(response);
+
+            var opt = $("<option>").text(sunetid).attr("data-reportID", response.id);
+            $("#students").append(opt);
+            $("#students options").removeAttr("selected");
+            opt.attr("selected", "selected");
+            this.loadGradeReport();
+          }, this));
+      }
+    }
   });
 
-  $(".edit-comment").click(function() {
-    var elem = $(this);
-    elem.hide();
-    var commentElem = elem.parents(".comment");
-    var commentID = commentElem.attr("data-id");
-  
-    var commentTextElem = elem.siblings(".comment-text");
-    var commentText = commentTextElem.text();
-    var textarea = $("<textarea/>").attr("columns", "30").attr("rows", "10");
-    textarea.val(commentText);
-    commentTextElem.empty();
-    commentTextElem.append(textarea).append($("<br/>"));
-    var doneButton = $("<button/>").text("Done");
-    var cancelButton = $("<button/>").text("Cancel");
-    commentTextElem.append(doneButton);
-    commentTextElem.append(cancelButton);
-
-    cancelButton.click(function() {
-      commentTextElem.empty();
-      commentTextElem.text(commentText);
-      elem.show();
-    });
-
-    doneButton.click(function() {
-      var newCommentText = textarea.val();
-      commentTextElem.empty();
-      commentTextElem.text(newCommentText);
-      elem.show();
-
-      console.log(commentID);
-      socket.put("/comment/"+commentID, {
-          text: newCommentText
-        }, function(response){
-          console.log(response);
-        });
-    });
-
+  $(function() {
+      var gradeReportView = new GradeReportView({
+        el: $("#grade-report"),
+        gradeReports: <%- JSON.stringify(reports) %>,
+        comments: <%- JSON.stringify(comments) %>
+      });
   });
-});
 </script>
 

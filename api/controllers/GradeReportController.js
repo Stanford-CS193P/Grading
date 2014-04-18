@@ -34,28 +34,33 @@ module.exports = {
           .done(function(err, comments) {
             if (err) return res.send(err, 500);
 
-            var requiredTasks = _.filter(comments, function(comment) {
-              return comment.type === "REQUIRED_TASK";
-            });
-            var evaluation = _.filter(comments, function(comment) {
-              return comment.type === "EVALUATION";
-            });
-            var extraCredit = _.filter(comments, function(comment) {
-              return comment.type === "EXTRA_CREDIT";
-            });
-            var other = _.filter(comments, function(comment) {
-              return comment.type === "OTHER";
-            });
+            // reports = _.map(reports, function(report) {
+            //   return report.toJSON();
+            // });
+
+            // var requiredTasks = _.filter(comments, function(comment) {
+            //   return comment.type === "REQUIRED_TASK";
+            // });
+            // var evaluation = _.filter(comments, function(comment) {
+            //   return comment.type === "EVALUATION";
+            // });
+            // var extraCredit = _.filter(comments, function(comment) {
+            //   return comment.type === "EXTRA_CREDIT";
+            // });
+            // var other = _.filter(comments, function(comment) {
+            //   return comment.type === "OTHER";
+            // });
 
             return res.view({
               grader: grader,
               assignment: assignment,
               reports: reports,
+              comments: comments
               // Comments...
-              requiredTasks: requiredTasks,
-              evaluation: evaluation,
-              extraCredit: extraCredit,
-              other: other
+              // requiredTasks: requiredTasks,
+              // evaluation: evaluation,
+              // extraCredit: extraCredit,
+              // other: other
             });
           });
       });
