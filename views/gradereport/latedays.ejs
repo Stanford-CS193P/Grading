@@ -1,0 +1,39 @@
+<h1>Grader: <%= grader %> | Assignment: <%= assignment %></h1>
+
+<span class="save-indicator"></span>
+
+<table>
+    <tr>
+        <th>Sunetid</th>
+        <th>Late Days</th>
+    </tr>
+    <% _.each(lateDays, function(lateDay) { %>
+    <tr class="late-day" data-id="<%= lateDay.id %>">
+        <td><%= lateDay.gradedForSunetid %></td>
+        <td><input type="text" value="<%= lateDay.lateDayCount %>"></input></td>
+    </tr>
+    <% }); %>
+</table>
+
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js"></script>
+
+<script>
+    $(function() {
+        $("input").keyup(function() {
+            var lateDayCount = $(this).val();
+            var id = $(this).parents(".late-day").attr("data-id");
+            var saveElem = $(".save-indicator");
+            saveElem.text("Saving...");
+            socket.put("/gradereport/"+id, { lateDayCount:lateDayCount }, function(response) {
+                console.log(response);
+                if (!response || response.success === false || response.status === 500) {
+                    saveElem.text("There was a problem saving");
+                    return;
+                }
+                saveElem.text("Saved");
+            });
+        });
+    });
+</script>

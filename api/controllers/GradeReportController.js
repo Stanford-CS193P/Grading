@@ -337,6 +337,31 @@ module.exports = {
       });
   },
 
+  lateDays: function(req, res) {
+    var assignment = req.param("assignment");
+    var grader = req.param("grader");
+
+    var filter = { assignment: assignment };
+    if (grader !== "all") filter.gradedBySunetid = grader;
+
+    GradeReport.find()
+      .where(filter)
+      .sort("gradedForSunetid")
+      .done(function(err, reports) {
+        if (err) return res.send(err, 500);
+
+        var lateDays = _.map(reports, function(report) {
+          return {
+            id:report.id,
+            gradedForSunetid:report.gradedForSunetid,
+            lateDayCount:report.lateDayCount
+          };
+        });
+
+        res.view({lateDays:lateDays, assignment:assignment, grader:grader});
+      });
+  },
+
   /**
    * Overrides for the settings in `config/controllers.js`
    * (specific to GradeReportController)

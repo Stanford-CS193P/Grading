@@ -79,12 +79,12 @@
                     return;
                 }
 
-                socket.get("/gradereport/sendAsEmail", emailReport, function (response) {
+                socket.get("/gradereport/sendAsEmail", emailReport, _.bind(function (response) {
                     console.log(response);
                     if (response && response.isEmailSent) emailReport.isEmailSent = true;
                     numToSend--;
                     if (numToSend === 0) this.render();
-                });
+                }, this));
             }, this));
         }
     });

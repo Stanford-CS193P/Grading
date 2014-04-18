@@ -12,10 +12,16 @@ module.exports = {
     assignment: "int",
     gradedBySunetid: "string",
     gradedForSunetid: "string",
-    lateDayCount: "int",
+    lateDayCount: {
+      type: "int",
+      defaultsTo: 0
+    },
     grade: "string",
     comments: "array",
-    isEmailSent: "boolean"
+    isEmailSent: {
+      type: "boolean",
+      defaultsTo: false
+    }
   }
 
 };
