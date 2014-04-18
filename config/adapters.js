@@ -39,6 +39,6 @@ module.exports.adapters = {
 
   mongo: {
     module: 'sails-mongo',
-    url   : process.env.MONGO_URL
+    url   : process.env.MONGOHQ_URL
   }
 };
