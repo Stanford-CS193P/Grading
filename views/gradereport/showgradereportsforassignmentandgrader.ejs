@@ -292,15 +292,18 @@
       var elem = $(event.target || event.currentTarget);
       var commentElem = elem.parents(".comment");
       var commentID = commentElem.attr("data-id");
+      var isChecked = commentElem.find("input[type=checkbox]").prop("checked");
       var comment = _.findWhere(this.comments, {id:commentID});
       var otherCommentsEditTpl = _.template($("#comment_other_edit_tpl").html());
       commentElem.replaceWith(otherCommentsEditTpl(comment));
+      this.$el.find(".comment[data-id="+commentID+"]").find("input[type=checkbox]").prop("checked", isChecked);
     },
     editCommentDone: function(event) {
       var elem = $(event.target || event.currentTarget);
       var commentElem = elem.parents(".comment");
       var commentID = commentElem.attr("data-id");
       var newCommentText = commentElem.find("textarea").val();
+      var isChecked = commentElem.find("input[type=checkbox]").prop("checked");
 
       socket.put("/comment/update/"+commentID, { text: newCommentText },
           _.bind(function(response){
@@ -317,6 +320,7 @@
             if (!comment) return;
             var otherCommentsTpl = _.template($("#comment_other_tpl").html());
             commentElem.replaceWith(otherCommentsTpl(comment));
+            this.$el.find(".comment[data-id="+commentID+"]").find("input[type=checkbox]").prop("checked", isChecked);
           }, this));
     },
     editCommentCancel: function(event) {
@@ -324,8 +328,10 @@
       var commentElem = elem.parents(".comment");
       var commentID = commentElem.attr("data-id");
       var comment = _.findWhere(this.comments, {id:commentID});
+      var isChecked = commentElem.find("input[type=checkbox]").prop("checked");
       var otherCommentsTpl = _.template($("#comment_other_tpl").html());
       commentElem.replaceWith(otherCommentsTpl(comment));
+      this.$el.find(".comment[data-id="+commentID+"]").find("input[type=checkbox]").prop("checked", isChecked);
     },
     addStudent: function() {
       var sunetid = prompt("Please enter new student's sunetid...");
