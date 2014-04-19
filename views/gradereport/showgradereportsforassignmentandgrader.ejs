@@ -15,10 +15,10 @@
       <td>
         <select id="students">
           {[ _.each(reports, function (report) { ]}
-            <option data-reportID="{{ report.id }}">{{ report.gradedForSunetid }}</option>
+            <option data-reportID="{{ report.id }}"
+              value="{{ report.gradedForSunetid }}">{{ report.gradedForSunetid }}</option>
           {[ }) ]}
         </select>
-        <!-- <button id="add-student">+</button> -->
       </td>
     </tr>
 
@@ -175,9 +175,17 @@
         }
       }, this);
 
+      var studentInURL = this.getStudentFromURL();
+      var selectedStudent = this.$students.find("option:selected").val();
+      if (studentInURL && studentInURL !== selectedStudent) {
+        var elem = this.$students.find("option[value="+studentInURL+"]");
+        if (elem.length) {
+          this.$students.find("option:selected").removeAttr("selected");
+          elem.attr("selected", "selected");
+        }
+      }
       var selectedGradeReportID = this.$students.find("option:selected").attr("data-reportID");
       var selectedGradeReport = _.findWhere(this.gradeReports, {id:selectedGradeReportID});
-      console.log(selectedGradeReport);
       if (!selectedGradeReport) return;
 
       if (selectedGradeReport.lateDayCount !== undefined) {
@@ -215,7 +223,6 @@
 
       "change #students": "loadGradeReport",
       "click #add-comment": "addComment",
-      "click #add-student": "addStudent",
       "click .edit-comment": "editComment",
       "click .edit-comment-done": "editCommentDone",
       "click .edit-comment-cancel": "editCommentCancel"
@@ -268,6 +275,8 @@
         }, this));
     },
     loadGradeReport: function() {
+      var student = this.$students.find("option:selected").val();
+      this.setStudentInURL(student);
       this.renderSelectedReport();
     },
     addComment: function() {
@@ -333,23 +342,11 @@
       commentElem.replaceWith(otherCommentsTpl(comment));
       this.$el.find(".comment[data-id="+commentID+"]").find("input[type=checkbox]").prop("checked", isChecked);
     },
-    addStudent: function() {
-      var sunetid = prompt("Please enter new student's sunetid...");
-      if (sunetid) {
-        socket.post("/gradereport/create", {
-            gradedBySunetid: "<%= grader %>",
-            gradedForSunetid: sunetid,
-            assignment: <%= assignment %>
-          }, _.bind(function (response) {
-            console.log(response);
-
-            var opt = $("<option>").text(sunetid).attr("data-reportID", response.id);
-            $("#students").append(opt);
-            $("#students options").removeAttr("selected");
-            opt.attr("selected", "selected");
-            this.loadGradeReport();
-          }, this));
-      }
+    getStudentFromURL: function() {
+      return window.location.hash.substr(1);
+    },
+    setStudentInURL: function(student) {
+      window.location.hash = student;
     }
   });
 
