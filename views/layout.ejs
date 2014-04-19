@@ -110,5 +110,13 @@
 
     -->
 
+    <script>
+    socket.on('disconnect',function() {
+      alert("The socket disconnected. "+
+        "Please refresh the page in order for changes to be saved! " +
+        "(This could be due to a lost connection, or a long period of in activity.)");
+    });
+    </script>
+
     </body>
 </html>
