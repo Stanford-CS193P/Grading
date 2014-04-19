@@ -55,7 +55,7 @@
 
     <tr id="new-comment-row">
       <td>
-        <textarea rows="10" cols="30" id="new-comment"></textarea><br/>
+        <textarea rows="12" cols="40" id="new-comment"></textarea><br/>
         <button id="add-comment">Add Comment</button>
       </td>
     </tr>
@@ -99,7 +99,7 @@
 <script type="text/template" id="comment_other_tpl">
 <tr class="comment" data-id="{{ id }}" data-type="OTHER">
   <td>
-    <p>{{ text }}</p>
+    <pre>{{ text }}</pre>
     <br>
     <button class="edit-comment">Edit Comment</button>
   </td>
@@ -112,7 +112,7 @@
 <script type="text/template" id="comment_other_edit_tpl">
 <tr class="comment" data-id="{{ id }}" data-type="OTHER">
   <td>
-    <textarea cols="30" rows="10">{{ text }}</textarea>
+    <textarea cols="40" rows="12">{{ text }}</textarea>
     <br><br>
     <button class="edit-comment-cancel">Cancel</button>
     <button class="edit-comment-done">Done</button>
