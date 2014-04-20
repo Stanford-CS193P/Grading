@@ -112,8 +112,11 @@
 
     <script>
     socket.on('disconnect',function() {
-      alert("The socket disconnected. "+
-        "Please refresh the page in order for changes to be saved! " +
+      alert("The socket disconnected.\n\n"+
+        "Ignore this message if you're just changing pages.\n\n" +
+        "If you were in the middle of making a change, it has not been saved. " +
+        "Please make a note of it, then try refreshing the page.\n\n" +
+        "To know that data has been saved, the 'Saved!' text should appear in the table, not just 'Saving...'.\n\n" +
         "(This could be due to a lost connection, or a long period of in activity.)");
     });
     </script>
