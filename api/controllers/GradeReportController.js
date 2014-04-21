@@ -137,7 +137,7 @@ module.exports = {
                 reportID: report.id,
                 isEmailSent: report.isEmailSent ? true : false,
                 from: "bbunge@stanford.edu",
-                to: "livelifeinspired@gmail.com",
+                to: report.gradedForSunetid + "@stanford.edu",
                 replyTo: report.gradedBySunetid + "@stanford.edu",
                 subject: "CS193P - Grade Report - Assignment " + report.assignment,
                 text: ""
