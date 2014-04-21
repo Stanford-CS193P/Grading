@@ -137,6 +137,8 @@ module.exports = {
                 reportID: report.id,
                 isEmailSent: report.isEmailSent ? true : false,
                 from: "bbunge@stanford.edu",
+                bcc: ["bbunge@stanford.edu",
+                  report.gradedBySunetid + "@stanford.edu"],
                 to: report.gradedForSunetid + "@stanford.edu",
                 replyTo: report.gradedBySunetid + "@stanford.edu",
                 subject: "CS193P - Grade Report - Assignment " + report.assignment,
