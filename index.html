@@ -1,0 +1,142 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <title>CS193P Grading</title>
+
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+
+<!--<link rel="stylesheet" href="css/styles.css?v=1.0">-->
+
+  <style>
+    body {
+      min-height: 2000px;
+      padding-top: 70px;
+    }
+  </style>
+
+</head>
+
+<body>
+
+<div id="app"></div>
+
+<script type="text/template" id="app-template">
+  <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+      <div class="navbar-header">
+      </div>
+
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li class="active"><a href="#">Home</a></li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="grade-reports container">
+  </div>
+
+</script>
+
+<script type="text/template" id="grade-report-view-template">
+  <h4>Grade report for: <%= gradedForSunetid %></h4>
+  <table class="table table-hover table-bordered">
+    <tbody class="comment-table">
+    </tbody>
+  </table>
+</script>
+
+<script type="text/template" id="grade-report-view-table-header-template">
+  <tr>
+    <th><%= header %></th>
+    <th></th>
+  </tr>
+</script>
+
+<script type="text/template" id="grade-report-required-task-comment-view-template">
+  <td><%= text %></td>
+  <td>
+    <input type="radio" name="<%= id %>" value="1"> +
+    <br>
+    <input type="radio" name="<%= id %>" value="-1"> -
+  </td>
+</script>
+
+<script type="text/template" id="grade-report-evaluation-comment-view-template">
+  <td><%= text %></td>
+  <td>
+    <input type="radio" name="<%= id %>" value="1"> +
+    <br>
+    <input type="radio" name="<%= id %>" value="-1"> -
+  </td>
+</script>
+
+<script type="text/template" id="grade-report-extra-credit-comment-view-template">
+  <td><%= text %></td>
+  <td>
+    <input type="radio" name="<%= id %>" value="1"> +
+    <br>
+    <input type="radio" name="<%= id %>" value="-1"> -
+  </td>
+</script>
+
+<script type="text/template" id="grade-report-other-comment-view-template">
+  <td>
+    <pre><%= text %></pre>
+    <br>
+    <button class="edit-comment">Edit Comment</button>
+  </td>
+  <td>
+    <input type="checkbox" name="<%= id %>" value="1"> Applies
+  </td>
+</script>
+
+<script type="text/template" id="grade-report-other-comment-edit-view-template">
+  <td>
+    <textarea cols="40" rows="12"><%= text %></textarea>
+    <br><br>
+    <button class="edit-comment-cancel">Cancel</button>
+    <button class="edit-comment-done">Done</button>
+  </td>
+  <td>
+    <input type="checkbox" name="<%= id %>" value="1"> Applies
+  </td>
+</script>
+
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js"></script>
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+<script src="js/lib/backbone.JJRelational.js"></script>
+
+<script src="js/models/comment.js"></script>
+<script src="js/models/grade-report-comment.js"></script>
+<script src="js/models/grade-report.js"></script>
+<script src="js/collections/comments.js"></script>
+<script src="js/collections/grade-report-comments.js"></script>
+<script src="js/collections/grade-reports.js"></script>
+<script src="js/views/grade-report-required-task-comment-view.js"></script>
+<script src="js/views/grade-report-evaluation-comment-view.js"></script>
+<script src="js/views/grade-report-extra-credit-comment-view.js"></script>
+<script src="js/views/grade-report-other-comment-view.js"></script>
+<script src="js/views/grade-report-view.js"></script>
+<script src="js/views/app-view.js"></script>
+
+<script>
+$(function() {
+    $.get('api/index.php/user', function (result) {
+        window.USER = result.user;
+        var app = new AppView();
+    });
+});
+</script>
+
+</body>
+
+</html>
