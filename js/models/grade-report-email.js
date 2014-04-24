@@ -1,5 +1,8 @@
 GradeReportEmail = Backbone.Model.extend({
+    urlRoot: "api/index.php/grade-report-emails",
+
     setPropertiesBasedOnGradeReport: function(gradeReport) {
+        this.set("gradeReportID", gradeReport.id);
         this.set("isSent", gradeReport.get("isSent"));
         this.set("from", gradeReport.get("gradedBySunetid") + "@stanford.edu");
         this.set("to", gradeReport.get("gradedForSunetid") + "@stanford.edu");

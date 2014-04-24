@@ -15,7 +15,8 @@ SendEmailItemView = Backbone.View.extend({
         var isSure = confirm("Are you sure?");
         if (!isSure) return;
 
-        $.get("api/index.php/sendmail", this.model.toJSON(), _.bind(function() {
+        $.get("api/index.php/sendmail", this.model.toJSON(), _.bind(function(response) {
+            if (!response.success) return;
             this.model.save("isSent", 1);
             this.render();
         }, this));

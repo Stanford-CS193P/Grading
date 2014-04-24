@@ -244,6 +244,19 @@ SQL;
             }
 
             echo json_encode($response);
+        },
+
+    'grade-report-emails' => function ($method, $params, $urlElements) {
+            $isSent = SQLite3::escapeString($params["isSent"]);
+            $gradeReportID = SQLite3::escapeString($params["gradeReportID"]);
+            $sql = "UPDATE grade_reports SET isSent = $$isSent where id = $$gradeReportID";
+            $db = new DB();
+            $success = $db->exec($sql);
+            $response = array();
+            if ($success) {
+                $response["isSent"] = $isSent;
+            }
+            echo json_encode($response);
         }
 );
 
