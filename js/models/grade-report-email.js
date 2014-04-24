@@ -5,8 +5,8 @@ GradeReportEmail = Backbone.Model.extend({
         this.set("gradeReportID", gradeReport.id);
         this.set("isSent", gradeReport.get("isSent"));
         this.set("from", gradeReport.get("gradedBySunetid") + "@stanford.edu");
+        this.set("replyTo", gradeReport.get("gradedBySunetid") + "@stanford.edu");
         this.set("to", gradeReport.get("gradedForSunetid") + "@stanford.edu");
-        this.set("replyTo", gradeReport.get("gradedForSunetid") + "@stanford.edu");
         this.set("subject", "CS193P Grade Report - Assignment " + gradeReport.get("assignment"));
 
         var template = _.template($("#grade-report-email-template").html());
@@ -19,5 +19,12 @@ GradeReportEmail = Backbone.Model.extend({
             });
         }
         this.set("body", template(param));
+    },
+
+    send: function() {
+        $.get("api/index.php/sendmail", this.toJSON(), _.bind(function(response) {
+            if (!response.success) return;
+            this.save("isSent", 1);
+        }, this));
     }
 });

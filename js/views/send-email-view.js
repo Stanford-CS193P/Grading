@@ -6,6 +6,10 @@ SendEmailItemView = Backbone.View.extend({
       "click .send-email": "onClickSendEmail"
     },
 
+    initialize: function() {
+        this.listenTo(this.model, "change:isSent", this.render);
+    },
+
     render: function() {
         this.$el.html(this.template(this.model.toJSON()));
         return this;
@@ -14,12 +18,7 @@ SendEmailItemView = Backbone.View.extend({
     onClickSendEmail: function() {
         var isSure = confirm("Are you sure?");
         if (!isSure) return;
-
-        $.get("api/index.php/sendmail", this.model.toJSON(), _.bind(function(response) {
-            if (!response.success) return;
-            this.model.save("isSent", 1);
-            this.render();
-        }, this));
+        this.model.send();
     }
 });
 

@@ -249,7 +249,7 @@ SQL;
     'grade-report-emails' => function ($method, $params, $urlElements) {
             $isSent = SQLite3::escapeString($params["isSent"]);
             $gradeReportID = SQLite3::escapeString($params["gradeReportID"]);
-            $sql = "UPDATE grade_reports SET isSent = $$isSent where id = $$gradeReportID";
+            $sql = "UPDATE grade_reports SET isSent = $isSent where id = $gradeReportID";
             $db = new DB();
             $success = $db->exec($sql);
             $response = array();
