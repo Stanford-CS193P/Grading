@@ -60,7 +60,7 @@ AppView = Backbone.View.extend({
     },
 
     render: function() {
-        this.$el.html(this.appTemplate({user: window.USER}));
+        this.$el.html(this.appTemplate({user: this.grader}));
         this.$container = this.$(".app-view-container");
         this.$saveIndicator = this.$(".save-indicator");
     },

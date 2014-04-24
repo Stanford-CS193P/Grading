@@ -1,3 +1,0 @@
-AuthType WebAuth
-AuthGroupFile /afs/ir.stanford.edu/class/cs193p/admin_auth_group
-require group admin
