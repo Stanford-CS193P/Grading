@@ -186,7 +186,7 @@ SQL;
                 $response = array();
                 if ($successComment) {
                     $response["isPublic"] = $isPublic;
-                    $response["text"] = $text;
+                    $response["text"] = $params["text"];
                     $response["type"] = $type;
                 }
                 if ($successGradeReportComment) {
