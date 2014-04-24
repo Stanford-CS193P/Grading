@@ -37,7 +37,8 @@ SendEmailView = Backbone.View.extend({
 
         var gradeReportsForAssignment = this.gradeReports.where({assignment: this.assignment});
         _.each(gradeReportsForAssignment, function(model) {
-            var emailModel = new GradeReportEmail({gradeReport: model, assignment: this.assignment});
+            var emailModel = new GradeReportEmail();
+            emailModel.setPropertiesBasedOnGradeReport(model);
             var view = new SendEmailItemView({model: emailModel});
             this.$table.append(view.render().el);
         }, this);
