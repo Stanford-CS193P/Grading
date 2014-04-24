@@ -81,7 +81,11 @@ AppView = Backbone.View.extend({
         if (gradeReport.get("gradedBySunetid") !== this.grader) return;
 
         var view = new GradeReportView({model: gradeReport});
-        this.$container.append(view.render().el);
+        var $elem = view.render().el;
+        this.$container.append($elem);
+        gradeReport.on("destroy", function() {
+            $elem.remove();
+        }, this);
     },
 
     addAllGradeReports: function () {

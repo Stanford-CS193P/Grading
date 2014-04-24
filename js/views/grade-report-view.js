@@ -5,7 +5,8 @@ GradeReportView = Backbone.View.extend({
 
     events: {
         "change .grade": "onChangeGrade",
-        "keyup .late-day-count": "onChangeLateDayCount"
+        "keyup .late-day-count": "onChangeLateDayCount",
+        "click .no-submission": "onClickNoSubmission"
     },
 
     initialize: function () {
@@ -83,6 +84,12 @@ GradeReportView = Backbone.View.extend({
     onChangeLateDayCount: function() {
         console.log(this.$lateDayCount.val());
         this.model.save("lateDayCount", this.$lateDayCount.val());
+    },
+
+    onClickNoSubmission: function() {
+        var isSure = confirm("Are you sure?");
+        if (!isSure) return;
+        this.model.destroy();
     }
 
 });

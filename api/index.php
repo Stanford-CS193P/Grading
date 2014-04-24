@@ -4,7 +4,6 @@ include_once("stanford.email.php");
 
 if ($_SERVER["SERVER_NAME"] == "localhost") {
     $_SERVER['WEBAUTH_USER'] = "bbunge";
-    sleep(1);
 }
 
 $USER = $_SERVER['WEBAUTH_USER'];
@@ -127,7 +126,22 @@ SQL;
             }
 
             if ($method == "DELETE") {
+                if (count($urlElements) < 1) return;
+                $gradeReportID = SQLite3::escapeString($urlElements[0]);
 
+                $sql = <<<SQL
+INSERT INTO grade_reports_not_submitted
+(assignment, gradedBySunetid, gradedForSunetid)
+VALUES (
+    (SELECT assignment FROM grade_reports WHERE id = $gradeReportID),
+    (SELECT gradedBySunetid FROM grade_reports WHERE id = $gradeReportID),
+    (SELECT gradedForSunetid FROM grade_reports WHERE id = $gradeReportID)
+)
+SQL;
+                $db = new DB();
+                $db->exec($sql);
+                $db->exec("DELETE FROM grade_reports WHERE id = $gradeReportID");
+                $db->exec("DELETE FROM grade_reports_comments WHERE grade_report_id = $gradeReportID");
             }
         },
     'grade-report-comments' => function ($method, $params, $urlElements) {

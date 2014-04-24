@@ -97,3 +97,9 @@ CREATE TABLE comments (
   isPublic    INTEGER,
     popularity  INTEGER
   , rank INTEGER);
+
+CREATE TABLE grade_reports_not_submitted (
+  assignment       INTEGER,
+  gradedBySunetid  TEXT,
+  gradedForSunetid TEXT
+);
