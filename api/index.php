@@ -62,7 +62,7 @@ $routes = array(
             if ($method == "GET") {
                 $db = new DB();
 
-                $result = $db->query('SELECT * FROM grade_reports');
+                $result = $db->query('SELECT * FROM grade_reports ORDER BY gradedBySunetid ASC, gradedForSunetid ASC');
                 $results = array();
                 while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                     array_push($results, $row);
