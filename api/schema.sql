@@ -22,7 +22,8 @@ CREATE TABLE grade_reports (
   gradedBySunetid  TEXT,
   gradedForSunetid TEXT,
   lateDayCount     INTEGER,
-  grade            TEXT
+  grade            TEXT,
+  isSent           INTEGER
 );
 
 DROP TABLE grade_reports_comments;

@@ -56,6 +56,15 @@
                             <li><a href="#overview/3">Assignment 3</a></li>
                         </ul>
                     </li>
+
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Send Emails <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#send-emails/1">Assignment 1</a></li>
+                            <li><a href="#send-emails/2">Assignment 2</a></li>
+                            <li><a href="#send-emails/3">Assignment 3</a></li>
+                        </ul>
+                    </li>
                 </ul>
 
                 <ul class="nav navbar-nav navbar-right">
@@ -280,6 +289,55 @@
     <td><input class="form-control" type="text" value="<%= lateDayCount %>"></input></td>
 </script>
 
+<script type="text/template" id="send-email-view-template">
+    <h1>Send emails for assignment <%= assignment %></h1>
+    <table class="table table-hover table-bordered">
+        <tbody class="send-email-table">
+        <tr>
+            <th>Send Email</th>
+            <th>Has been sent?</th>
+            <th>Email</th>
+        </tr>
+        </tbody>
+    </table>
+</script>
+
+<script type="text/template" id="send-email-item-view-template">
+    <td>
+        <button class="send-email btn btn-default">Send email</button>
+    </td>
+    <td><%= isSent === 0 ? "No" : "Yes" %></td>
+    <td>
+        <strong>From:</strong> <%= from %><br>
+        <strong>To:</strong> <%= to %><br>
+        <strong>Subject:</strong> <%= subject %><br><br>
+
+        <div class="well"><%= body %></div>
+    </td>
+</script>
+
+<script type="text/template" id="grade-report-email-template">
+    <p>Graded by: <%= gradedBySunetid %></p>
+    <p>Graded for: <%= gradedForSunetid %></p>
+    <p>Grade: <%= grade %></p>
+    <p>Late Days: <%= lateDayCount %></p>
+    
+    <p>
+        <% var curType = null; %>
+        <% _.each(comments, function(comment) { %>
+        <% if (comment.type !== curType) { %>
+        <% if (curType !== null) %></ul>
+        <% curType = comment.type; %>
+        <h6><%= comment.type %></h6>
+        <ul>
+            <% } %>
+            <% if (comment.value === "1") %>
+            <li><%= comment.text %></li>
+        <% }); %>
+        </ul>
+    </p>
+</script>
+
 <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js"></script>
@@ -287,6 +345,7 @@
 
 <script src="js/models/grade-report-comment.js"></script>
 <script src="js/models/grade-report.js"></script>
+<script src="js/models/grade-report-email.js"></script>
 <script src="js/collections/grade-report-comments.js"></script>
 <script src="js/collections/grade-reports.js"></script>
 <script src="js/views/grade-report-required-task-comment-view.js"></script>
@@ -297,6 +356,7 @@
 <script src="js/views/grade-report-view.js"></script>
 <script src="js/views/grade-report-readonly-view.js"></script>
 <script src="js/views/late-day-view.js"></script>
+<script src="js/views/send-email-view.js"></script>
 <script src="js/views/app-view.js"></script>
 
 <script>

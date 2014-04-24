@@ -1,5 +1,8 @@
 <?php
 
+// Include StanfordEmail
+include_once("stanford.email.php");
+
 class DB extends SQLite3
 {
     function __construct()
@@ -30,7 +33,7 @@ function commentCmp($comment1, $comment2)
     return ($val1 < $val2) ? -1 : 1;
 }
 
-$USER = $_SERVER['WEBAUTH_USER'];
+$USER = "bbunge"; //$_SERVER['WEBAUTH_USER'];
 
 $routes = array(
     'index' => function ($method, $params, $urlElements) {
@@ -132,8 +135,8 @@ SQL;
                 $author = SQLite3::escapeString($params["author"]);
                 $popularity = SQLite3::escapeString($params["popularity"]);
 
-                $sql = "insert into comments ".
-                    "(assignment, isPublic, commentText, commentType, author, popularity) ".
+                $sql = "insert into comments " .
+                    "(assignment, isPublic, commentText, commentType, author, popularity) " .
                     "VALUES ($assignment, $isPublic, '$text', '$type', '$author', $popularity)";
                 $db = new DB();
                 $success = $db->exec($sql);
@@ -155,9 +158,9 @@ SQL;
                 $text = SQLite3::escapeString($params["text"]);
                 $type = SQLite3::escapeString($params["type"]);
 
-                $sqlGradeReportComment = "insert or replace into grade_reports_comments ".
+                $sqlGradeReportComment = "insert or replace into grade_reports_comments " .
                     "(grade_report_id, comment_id, value) values ($gradeReportID, $commentID, '$value')";
-                $sqlComment = "UPDATE comments SET ".
+                $sqlComment = "UPDATE comments SET " .
                     "isPublic = $isPublic, commentText = '$text', commentType = '$type' " .
                     "WHERE id = $commentID";
 
@@ -167,8 +170,8 @@ SQL;
 
                 // TODO: make more effecient (only update this comment's popularity)
                 // Only consider popularity for "Other" comments
-                $sqlPopularity = "update comments set popularity = ".
-                    "(select count(*) from grade_reports_comments where comment_id = id and value = '1') ".
+                $sqlPopularity = "update comments set popularity = " .
+                    "(select count(*) from grade_reports_comments where comment_id = id and value = '1') " .
                     "WHERE commentType = 'OTHER'";
                 $db->exec($sqlPopularity);
 
@@ -213,6 +216,34 @@ SQL;
             if ($method == "DELETE") {
 
             }
+        },
+
+    'sendmail' => function ($method, $params, $urlElements) {
+            $from = $params["from"];
+            $to = "bbunge@stanford.edu";//$params["to"];
+            $replyTo = $params["replyTo"];
+            $subject = $params["subject"];
+            $body = $params["body"];
+
+            $email = new StanfordEmail();
+            $email->set_sender($from, $from);
+            $email->set_recipient($to, $to);
+            $email->set_subject($subject);
+            $email->add_bcc("bbunge@stanford.edu", "Brie Bunge");
+            $email->add_reply_to($replyTo, $replyTo);
+
+            $email->set_body($body, $is_html = true);
+
+            $response = array();
+            if ($email->send()) {
+                $response["success"] = true;
+                $response["message"] = "Message sent successfully!";
+            } else {
+                $response["success"] = false;
+                $response["errors"] = $email->get_errors();
+            }
+
+            echo json_encode($response);
         }
 );
 

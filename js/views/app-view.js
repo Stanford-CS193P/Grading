@@ -5,7 +5,8 @@ Router = Backbone.Router.extend({
     routes: {
         "grade/:assignment": "gradeAssignment",
         "overview/:assignment": "overviewAssignment",
-        "late-days/:assignment": "lateDaysAssignment"
+        "late-days/:assignment": "lateDaysAssignment",
+        "send-emails/:assignment": "sendEmailsAssignment"
     }
 });
 var router = new Router();
@@ -57,6 +58,12 @@ AppView = Backbone.View.extend({
             this.renderContent = this.renderLateDays;
             this.renderContent();
         }, this);
+
+        router.on("route:sendEmailsAssignment", function(assignment) {
+            this.assignment = parseInt(assignment, 10);
+            this.renderContent = this.renderSendEmails;
+            this.renderContent();
+        }, this);
     },
 
     render: function() {
@@ -91,6 +98,16 @@ AppView = Backbone.View.extend({
     renderLateDays: function() {
         this.$container.empty();
         var view = new LateDayView({
+            gradeReports: this.gradeReports,
+            assignment: this.assignment,
+            grader: this.grader
+        });
+        this.$container.append(view.render().el);
+    },
+
+    renderSendEmails: function() {
+        this.$container.empty();
+        var view = new SendEmailView({
             gradeReports: this.gradeReports,
             assignment: this.assignment,
             grader: this.grader
