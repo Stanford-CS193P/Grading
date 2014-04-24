@@ -1,34 +1,108 @@
+EventDispatcher = _.extend({}, Backbone.Events);
+
+
+Router = Backbone.Router.extend({
+    routes: {
+        "grade/:assignment": "gradeAssignment",
+        "overview/:assignment": "overviewAssignment",
+        "late-days/:assignment": "lateDaysAssignment"
+    }
+});
+var router = new Router();
+
 AppView = Backbone.View.extend({
     el: "#app",
 
     appTemplate: _.template($('#app-template').html()),
 
     initialize: function () {
+        this.setUpRoutes();
+        this.grader = window.USER;
+
         this.gradeReports = new GradeReports();
-        // TODO: think about how to do comments
-        this.comments = new Comments();
+        this.gradeReports.fetch({reset: true, success: _.bind(function() {
+            if (this.renderContent) this.renderContent();
 
-        this.listenTo(this.gradeReports, 'add', this.addOne);
-        this.listenTo(this.gradeReports, 'reset', this.addAll);
+            this.gradeReports.each(function(report) {
+                var comments = report.get("comments");
+                if (!comments) return;
+                this.listenTo(comments, "request", this.onRequest);
+                this.listenTo(comments, "sync", this.onSync);
+            }, this);
+        }, this)});
 
-        this.gradeReports.fetch({reset: true});
-        this.comments.fetch({reset: true});
+        this.listenTo(this.gradeReports, "request", this.onRequest);
+        this.listenTo(this.gradeReports, "sync", this.onSync);
+
+        this.renderContent = null;
+
         this.render();
     },
 
-    render: function () {
-        this.$el.html(this.appTemplate());
+    setUpRoutes: function() {
+        router.on("route:gradeAssignment", function(assignment) {
+            this.assignment = parseInt(assignment, 10);
+            this.renderContent = this.renderGradeReports;
+            this.renderContent();
+        }, this);
 
-        this.$gradeReports = this.$(".grade-reports");
+        router.on("route:overviewAssignment", function(assignment) {
+            this.assignment = parseInt(assignment, 10);
+            this.renderContent = this.renderOverview;
+            this.renderContent();
+        }, this);
+
+        router.on("route:lateDaysAssignment", function(assignment) {
+            this.assignment = parseInt(assignment, 10);
+            this.renderContent = this.renderLateDays;
+            this.renderContent();
+        }, this);
     },
 
-    addOne: function (gradeReport) {
+    render: function() {
+        this.$el.html(this.appTemplate({user: window.USER}));
+        this.$container = this.$(".app-view-container");
+        this.$saveIndicator = this.$(".save-indicator");
+    },
+
+    renderGradeReports: function () {
+        this.$container.empty();
+        this.addAllGradeReports();
+    },
+
+    addOneGradeReport: function (gradeReport) {
+        if (gradeReport.get("assignment") !== this.assignment) return;
+        if (gradeReport.get("gradedBySunetid") !== this.grader) return;
+
         var view = new GradeReportView({model: gradeReport});
-        this.$gradeReports.append(view.render().el);
+        this.$container.append(view.render().el);
     },
 
-    addAll: function () {
-        console.log(this.gradeReports);
-        this.gradeReports.each(this.addOne, this);
+    addAllGradeReports: function () {
+        this.gradeReports.each(this.addOneGradeReport, this);
+    },
+
+    renderOverview: function() {
+        this.$container.empty();
+        var view = new GradeReportReadonlyView({ gradeReports: this.gradeReports, assignment: this.assignment });
+        this.$container.append(view.render().el);
+    },
+
+    renderLateDays: function() {
+        this.$container.empty();
+        var view = new LateDayView({
+            gradeReports: this.gradeReports,
+            assignment: this.assignment,
+            grader: this.grader
+        });
+        this.$container.append(view.render().el);
+    },
+
+    onRequest: function() {
+        this.$saveIndicator.text("Saving...");
+    },
+
+    onSync: function(model_or_collection, resp, options) {
+        this.$saveIndicator.text("Saved!");
     }
 });

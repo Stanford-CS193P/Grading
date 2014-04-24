@@ -2,19 +2,17 @@
 
 <html lang="en">
 <head>
-  <title>CS193P Grading</title>
+    <title>CS193P Grading</title>
 
-  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
-  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
 
-<!--<link rel="stylesheet" href="css/styles.css?v=1.0">-->
-
-  <style>
-    body {
-      min-height: 2000px;
-      padding-top: 70px;
-    }
-  </style>
+    <style>
+        body {
+            min-height: 2000px;
+            padding-top: 70px;
+        }
+    </style>
 
 </head>
 
@@ -23,89 +21,263 @@
 <div id="app"></div>
 
 <script type="text/template" id="app-template">
-  <div class="navbar navbar-default navbar-fixed-top" role="navigation">
-    <div class="container">
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container">
 
-      <div class="navbar-header">
-      </div>
+            <div class="navbar-header">
+                <a class="navbar-brand" href="javascript:void(0)">CS193P | <%= user %></a>
+            </div>
 
-      <div class="navbar-collapse collapse">
-        <ul class="nav navbar-nav">
-          <li class="active"><a href="#">Home</a></li>
-        </ul>
-      </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Grade <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#grade/1">Assignment 1</a></li>
+                            <li><a href="#grade/2">Assignment 2</a></li>
+                            <li><a href="#grade/3">Assignment 3</a></li>
+                        </ul>
+                    </li>
 
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Late Days <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#late-days/1">Assignment 1</a></li>
+                            <li><a href="#late-days/2">Assignment 2</a></li>
+                            <li><a href="#late-days/3">Assignment 3</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Overview <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#overview/1">Assignment 1</a></li>
+                            <li><a href="#overview/2">Assignment 2</a></li>
+                            <li><a href="#overview/3">Assignment 3</a></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="javascript:void(0)" class="save-indicator"></a></li>
+                </ul>
+
+            </div>
+
+        </div>
     </div>
-  </div>
 
-  <div class="grade-reports container">
-  </div>
+    <div class="app-view-container container">
+    </div>
 
 </script>
 
 <script type="text/template" id="grade-report-view-template">
-  <h4>Grade report for: <%= gradedForSunetid %></h4>
-  <table class="table table-hover table-bordered">
-    <tbody class="comment-table">
-    </tbody>
-  </table>
+    <h1>Grade report for: <%= gradedForSunetid %></h1>
+    <table class="table table-hover table-bordered">
+        <tbody class="comment-table">
+        <tr>
+            <td><strong>Grade</strong></td>
+            <td>
+                <select class="grade form-control">
+                    <option>TODO</option>
+                    <option>+</option>
+                    <option>Check+</option>
+                    <option>Check/Check+</option>
+                    <option>Check</option>
+                    <option>Check/Check-</option>
+                    <option>Check-</option>
+                    <option>-</option>
+                </select>
+            </td>
+        </tr>
+
+        <tr>
+            <td><strong>Late Days</strong></td>
+            <td>
+                <input class="late-day-count form-control" type="text" placeholder="Late Day Count" value="<%= lateDayCount %>" />
+            </td>
+        </tr>
+
+        </tbody>
+    </table>
 </script>
 
 <script type="text/template" id="grade-report-view-table-header-template">
-  <tr>
-    <th><%= header %></th>
-    <th></th>
-  </tr>
+    <tr>
+        <th><%= header %></th>
+        <th style="min-width: 240px;"></th>
+    </tr>
 </script>
 
 <script type="text/template" id="grade-report-required-task-comment-view-template">
-  <td><%= text %></td>
-  <td>
-    <input type="radio" name="<%= id %>" value="1"> +
-    <br>
-    <input type="radio" name="<%= id %>" value="-1"> -
-  </td>
+    <td><%= text %></td>
+    <td class="<%= value === '-1' ? 'success' : (value === '1' ? 'danger' : '') %>">
+        <div class="radio">
+            <label>
+                <input type="radio" name="<%= gradeReportID %>_<%= id %>" value="-1" <%= value === "-1" ? "checked" : "" %>> Task was done
+            </label>
+        </div>
+        <div class="radio">
+            <label>
+                <input type="radio" name="<%= gradeReportID %>_<%= id %>" value="1" <%= value === "1" ? "checked" : "" %>> Task was NOT done
+            </label>
+        </div>
+    </td>
 </script>
 
 <script type="text/template" id="grade-report-evaluation-comment-view-template">
-  <td><%= text %></td>
-  <td>
-    <input type="radio" name="<%= id %>" value="1"> +
-    <br>
-    <input type="radio" name="<%= id %>" value="-1"> -
-  </td>
+    <td><%= text %></td>
+    <td class="<%= value === '-1' ? 'success' : (value === '1' ? 'danger' : '') %>">
+        <div class="radio">
+            <label>
+                <input type="radio" name="<%= gradeReportID %>_<%= id %>" value="-1" <%= value === "-1" ? "checked" : "" %>> This was NOT an issue
+            </label>
+        </div>
+        <div class="radio">
+            <label>
+                <input type="radio" name="<%= gradeReportID %>_<%= id %>" value="1" <%= value === "1" ? "checked" : "" %>> This was an issue
+            </label>
+        </div>
+    </td>
 </script>
 
 <script type="text/template" id="grade-report-extra-credit-comment-view-template">
-  <td><%= text %></td>
-  <td>
-    <input type="radio" name="<%= id %>" value="1"> +
-    <br>
-    <input type="radio" name="<%= id %>" value="-1"> -
-  </td>
+    <td><%= text %></td>
+    <td class="<%= value === '1' ? 'success' : (value === '-1' ? 'warning' : '') %>">
+        <div class="radio">
+            <label>
+                <input type="radio" name="<%= gradeReportID %>_<%= id %>" value="1" <%= value === "1" ? "checked" : "" %>> Item was done
+            </label>
+        </div>
+        <div class="radio">
+            <label>
+                <input type="radio" name="<%= gradeReportID %>_<%= id %>" value="-1" <%= value === "-1" ? "checked" : "" %>> Item was NOT done
+            </label>
+        </div>
+    </td>
 </script>
 
 <script type="text/template" id="grade-report-other-comment-view-template">
-  <td>
-    <pre><%= text %></pre>
-    <br>
-    <button class="edit-comment">Edit Comment</button>
-  </td>
-  <td>
-    <input type="checkbox" name="<%= id %>" value="1"> Applies
-  </td>
+    <td>
+        <% if (isPublic) { %>
+        <span alt="public comment" class="glyphicon glyphicon-globe"></span>
+        <% } %>
+        <p><%= text.replace(/\n/g,"<br>") %></p>
+        <button class="edit-comment btn btn-default btn-xs" type="button">Edit Comment</button>
+    </td>
+    <td class="<%= value === '1' ? 'info' : '' %>">
+        <div class="checkbox">
+            <label>
+                <input class="comment-applies" type="checkbox" value="1" <%= value === "1" ? "checked" : "" %>> This comment applies
+            </label>
+        </div>
+    </td>
 </script>
 
 <script type="text/template" id="grade-report-other-comment-edit-view-template">
-  <td>
-    <textarea cols="40" rows="12"><%= text %></textarea>
-    <br><br>
-    <button class="edit-comment-cancel">Cancel</button>
-    <button class="edit-comment-done">Done</button>
-  </td>
-  <td>
-    <input type="checkbox" name="<%= id %>" value="1"> Applies
-  </td>
+    <td>
+        <% if (isPublic) { %>
+        <div class="alert alert-danger">
+            This is a public comment.<br/>
+            Public comments are shared between all graders.<br/>
+            Modifications to public comments affect all graders.
+        </div>
+        <% } %>
+
+        <textarea class="form-control" rows="5"><%= text %></textarea>
+        <button class="edit-comment-done btn btn-default btn-xs" type="button">Done</button>
+        <button class="edit-comment-cancel btn btn-danger btn-xs" type="button">Cancel</button>
+    </td>
+    <td class="<%= value === '1' ? 'info' : '' %>">
+        <div class="checkbox">
+            <label>
+                <input class="comment-applies" type="checkbox" name="<%= id %>" value="1" <%= value === "1" ? "checked" : "" %>>
+                This comment applies
+            </label>
+        </div>
+    </td>
+</script>
+
+<script type="text/template" id="grade-report-other-comment-create-view-template">
+    <td>
+        <textarea class="form-control" rows="5"></textarea>
+        <button class="add-comment btn btn-default btn-xs" type="button">Add Comment</button>
+        <div class="checkbox">
+            <label>
+                <input class="is-public" type="checkbox" value="1">
+                Check to make this a public/global/shared comment<br/>
+                (as opposed to specific to this student)<br/>
+                Public comments are shared between all graders.<br/>
+                Modifications to public comments affect all graders.
+            </label>
+        </div>
+    </td>
+    <td></td>
+</script>
+
+<script type="text/template" id="grade-report-readonly-view-template">
+    <h1>Grades for assignment <%= assignment %></h1>
+    <table class="table table-hover table-bordered">
+        <tbody class="comment-table">
+        <tr>
+            <th>Graded by</th>
+            <th>Graded for</th>
+            <th>Grade</th>
+            <th>Late Days</th>
+            <th>Comments</th>
+        </tr>
+        <% _.each(gradeReports, function(gradeReport) { %>
+        <tr>
+            <td><%= gradeReport.gradedBySunetid %></td>
+            <td><%= gradeReport.gradedForSunetid %></td>
+            <td><%= gradeReport.grade %></td>
+            <td><%= gradeReport.lateDayCount %></td>
+            <td>
+                <% var curType = null; %>
+                <% _.each(gradeReport.comments, function(comment) { %>
+                    <% if (comment.type !== curType) { %>
+                        <% if (curType !== null) %></ul>
+                        <% curType = comment.type; %>
+                        <h6><%= comment.type %></h6>
+                        <ul>
+                    <% } %>
+                    <% if (comment.value === "1") %>
+                        <li><%= comment.text %></li>
+                <% }); %>
+                </ul>
+            </td>
+        </tr>
+        <% }); %>
+        </tbody>
+    </table>
+</script>
+
+<script type="text/template" id="late-day-view-template">
+    <h1>Late days for assignment <%= assignment %></h1>
+
+    <h2>
+        Due Date:
+        <% if (assignment == 2) { %>
+        April 15, 2014 @ 4:15p
+        <% } else if (assignment == 3) { %>
+        April 22, 2014 @ 4:15p
+        <% } else { %>
+        ?
+        <% } %>
+    </h2>
+
+    <table class="late-day-table table table-hover table-bordered">
+        <tr>
+            <th>Sunetid</th>
+            <th>Late Days</th>
+        </tr>
+    </table>
+</script>
+
+<script type="text/template" id="late-day-item-view-template">
+    <td><%= gradedForSunetid %></td>
+    <td><input class="form-control" type="text" value="<%= lateDayCount %>"></input></td>
 </script>
 
 <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
@@ -113,28 +285,28 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js"></script>
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 
-<script src="js/lib/backbone.JJRelational.js"></script>
-
-<script src="js/models/comment.js"></script>
 <script src="js/models/grade-report-comment.js"></script>
 <script src="js/models/grade-report.js"></script>
-<script src="js/collections/comments.js"></script>
 <script src="js/collections/grade-report-comments.js"></script>
 <script src="js/collections/grade-reports.js"></script>
 <script src="js/views/grade-report-required-task-comment-view.js"></script>
 <script src="js/views/grade-report-evaluation-comment-view.js"></script>
 <script src="js/views/grade-report-extra-credit-comment-view.js"></script>
+<script src="js/views/grade-report-other-comment-create-view.js"></script>
 <script src="js/views/grade-report-other-comment-view.js"></script>
 <script src="js/views/grade-report-view.js"></script>
+<script src="js/views/grade-report-readonly-view.js"></script>
+<script src="js/views/late-day-view.js"></script>
 <script src="js/views/app-view.js"></script>
 
 <script>
-$(function() {
-    $.get('api/index.php/user', function (result) {
-        window.USER = result.user;
-        var app = new AppView();
+    $(function () {
+        $.get('api/index.php/user', function (result) {
+            window.USER = result.user;
+            var app = new AppView();
+            Backbone.history.start();
+        });
     });
-});
 </script>
 
 </body>

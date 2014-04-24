@@ -1,22 +1,13 @@
-GradeReport = Backbone.JJRelationalModel.extend({
-    relations: [
-        {
-            type: 'has_many',
-            relatedModel: 'GradeReportComment',
-            key: 'comments',
-            reverseKey: 'gradeReport',
-            collectionType: 'GradeReportComments',
-            includeInJSON: ['id']
-        }
-    ],
-
+GradeReport = Backbone.Model.extend({
     defaults: {
         lateDayCount: 0,
         grade: ''
     },
 
     parse: function (response) {
-        response.comments = new GradeReportComments(response.comments);
+        if (response.comments) {
+            response.comments = new GradeReportComments(response.comments);
+        }
         return response;
     },
 
@@ -24,6 +15,6 @@ GradeReport = Backbone.JJRelationalModel.extend({
         if (attributes.comments !== undefined && !(attributes.comments instanceof GradeReportComments)) {
             attributes.comments = new GradeReportComments(attributes.comments);
         }
-        return Backbone.JJRelationalModel.prototype.set.call(this, attributes, options);
+        return Backbone.Model.prototype.set.call(this, attributes, options);
     }
 });
