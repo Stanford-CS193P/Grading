@@ -70,16 +70,17 @@ $routes = array(
 
                 foreach ($results as &$result) {
                     $gradeReportID = $result["id"];
+                    $assignment = $result["assignment"];
                     global $USER;
                     $sql = <<<SQL
 SELECT id, isPublic, author, commentText as text, commentType as type, value, popularity, position
 FROM grade_reports_comments JOIN comments ON comment_id = id
-WHERE grade_report_id = $gradeReportID
+WHERE grade_report_id = $gradeReportID AND assignment = $assignment
 UNION
 SELECT id, isPublic, author, commentText as text, commentType as type, "", popularity, position
 FROM comments
 WHERE id not in (select comment_id from grade_reports_comments WHERE grade_report_id = $gradeReportID)
-AND isPublic = 1
+AND isPublic = 1 AND assignment = $assignment
 ORDER BY position ASC, type ASC, popularity DESC
 SQL;
                     $commentQuery = $db->query($sql);
