@@ -24,15 +24,19 @@ function commentCmp($comment1, $comment2)
     else if ($comment2["type"] == "EXTRA_CREDIT") $val2 = 3;
     else if ($comment2["type"] == "OTHER") $val2 = 4;
 
-    if ($val1 == $val2) {
-        if ($comment1["position"] != $comment2["position"]) {
-            return ($comment1["position"] < $comment2["position"]) ? -1 : 1;
-        }
-        return ($comment2["popularity"] < $comment1["popularity"]) ? -1 : 1;
-    }
-    return ($val1 < $val2) ? -1 : 1;
+    if ($val1 != $val2)
+        return ($val1 < $val2) ? -1 : 1;
+
+    if ($comment1["position"] != $comment2["position"])
+        return ($comment1["position"] < $comment2["position"]) ? -1 : 1;
+
+    if ($comment1["isPublic"] != $comment2["isPublic"])
+        return ($comment1["isPublic"] < $comment2["isPublic"]) ? -1 : 1;
+
+    return ($comment2["popularity"] < $comment1["popularity"]) ? -1 : 1;
 }
 
+//TODO: make real
 $USER = "bbunge"; //$_SERVER['WEBAUTH_USER'];
 
 $routes = array(
@@ -81,7 +85,7 @@ SELECT id, isPublic, author, commentText as text, commentType as type, "", popul
 FROM comments
 WHERE id not in (select comment_id from grade_reports_comments WHERE grade_report_id = $gradeReportID)
 AND isPublic = 1 AND assignment = $assignment
-ORDER BY position ASC, type ASC, popularity DESC
+ORDER BY position ASC, type ASC, isPublic ASC, popularity DESC
 SQL;
                     $commentQuery = $db->query($sql);
                     $comments = array();

@@ -115,11 +115,15 @@ AppView = Backbone.View.extend({
         this.$container.append(view.render().el);
     },
 
-    onRequest: function() {
+    onRequest: function(model_or_collection, xhr, options) {
         this.$saveIndicator.text("Saving...");
     },
 
     onSync: function(model_or_collection, resp, options) {
         this.$saveIndicator.text("Saved!");
+    },
+
+    onError: function(model_or_collection, resp, options)  {
+        this.$saveIndicator.text("ERROR! Not saved. Try refreshing the page - might need to log in again...");
     }
 });
