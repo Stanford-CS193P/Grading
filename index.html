@@ -201,6 +201,7 @@
 
         <textarea class="form-control" rows="5"><%= text %></textarea>
         <button class="edit-comment-done btn btn-default btn-xs" type="button">Done</button>
+        &nbsp;&nbsp;&nbsp;&nbsp;
         <button class="edit-comment-cancel btn btn-danger btn-xs" type="button">Cancel</button>
     </td>
     <td class="<%= value === '1' ? 'info' : '' %>">
@@ -325,24 +326,32 @@
 </script>
 
 <script type="text/template" id="grade-report-email-template">
-    <p>Graded by: <%= gradedBySunetid %></p>
-    <p>Graded for: <%= gradedForSunetid %></p>
-    <p>Grade: <%= grade %></p>
-    <p>Late Days: <%= lateDayCount %></p>
-    
+    <p><strong>Graded by:</strong> <%= gradedBySunetid %></p>
+    <p><strong>Graded for:</strong> <%= gradedForSunetid %></p>
+    <p><strong>Grade:</strong> <%= grade %></p>
+    <p><strong>Late Days:</strong> <%= lateDayCount %></p>
+
     <p>
         <% var curType = null; %>
         <% _.each(comments, function(comment) { %>
         <% if (comment.type !== curType) { %>
         <% if (curType !== null) %></ul>
         <% curType = comment.type; %>
-        <h6><%= comment.type %></h6>
+        <strong><%= comment.type %></strong>
         <ul>
             <% } %>
             <% if (comment.value === "1") %>
             <li><%= comment.text %></li>
         <% }); %>
         </ul>
+    </p>
+
+    <p>
+        <br>
+        <em>
+            Please let us know if you feel there were any issues in the grading of your assignment.
+            Thank you for your hard work! :)
+        </em>
     </p>
 </script>
 
