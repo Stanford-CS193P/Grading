@@ -1,7 +1,8 @@
 <?php
 
-// Include StanfordEmail
 include_once("stanford.email.php");
+
+$USER = $_SERVER['WEBAUTH_USER'];
 
 class DB extends SQLite3
 {
@@ -35,9 +36,6 @@ function commentCmp($comment1, $comment2)
 
     return ($comment2["popularity"] < $comment1["popularity"]) ? -1 : 1;
 }
-
-//TODO: make real
-$USER = "bbunge"; //$_SERVER['WEBAUTH_USER'];
 
 $routes = array(
     'index' => function ($method, $params, $urlElements) {
@@ -225,8 +223,7 @@ SQL;
 
     'sendmail' => function ($method, $params, $urlElements) {
             $from = $params["from"];
-            // TODO: make real
-            $to = "bbunge@stanford.edu";//$params["to"];
+            $to = $params["to"];
             $replyTo = $params["replyTo"];
             $subject = $params["subject"];
             $body = $params["body"];
@@ -235,7 +232,7 @@ SQL;
             $email->set_sender($from, $from);
             $email->set_recipient($to, $to);
             $email->set_subject($subject);
-            $email->add_bcc("bbunge@stanford.edu", "Brie Bunge");
+            $email->add_bcc("bbunge@stanford.edu", "Brie");
             $email->add_reply_to($replyTo, $replyTo);
 
             $email->set_body($body, $is_html = true);
