@@ -220,6 +220,7 @@ SQL;
 
     'sendmail' => function ($method, $params, $urlElements) {
             $from = $params["from"];
+            // TODO: make real
             $to = "bbunge@stanford.edu";//$params["to"];
             $replyTo = $params["replyTo"];
             $subject = $params["subject"];
