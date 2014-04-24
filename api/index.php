@@ -2,6 +2,11 @@
 
 include_once("stanford.email.php");
 
+if ($_SERVER["SERVER_NAME"] == "localhost") {
+    $_SERVER['WEBAUTH_USER'] = "bbunge";
+    sleep(1);
+}
+
 $USER = $_SERVER['WEBAUTH_USER'];
 
 class DB extends SQLite3

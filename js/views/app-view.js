@@ -19,9 +19,12 @@ AppView = Backbone.View.extend({
     initialize: function () {
         this.setUpRoutes();
         this.grader = window.USER;
+        this.renderContent = null;
+        this.render();
 
         this.gradeReports = new GradeReports();
         this.gradeReports.fetch({reset: true, success: _.bind(function() {
+            this.$(".loading-alert").remove();
             if (this.renderContent) this.renderContent();
 
             this.gradeReports.each(function(report) {
@@ -34,10 +37,6 @@ AppView = Backbone.View.extend({
 
         this.listenTo(this.gradeReports, "request", this.onRequest);
         this.listenTo(this.gradeReports, "sync", this.onSync);
-
-        this.renderContent = null;
-
-        this.render();
     },
 
     setUpRoutes: function() {
