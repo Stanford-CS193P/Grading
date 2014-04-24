@@ -30,8 +30,7 @@ function commentCmp($comment1, $comment2)
     return ($val1 < $val2) ? -1 : 1;
 }
 
-// TODO
-$USER = "bbunge"; //$_SERVER['WEBAUTH_USER'];
+$USER = $_SERVER['WEBAUTH_USER'];
 
 $routes = array(
     'index' => function ($method, $params, $urlElements) {
@@ -221,7 +220,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 $urlElements = explode('/', $_SERVER['PATH_INFO']);
 array_shift($urlElements);
-if (count($urlElements) == 0) $urlElements = ['index'];
+if (count($urlElements) == 0) $urlElements = array('index');
 
 $params = array();
 if ($method == "PUT" || $method == "POST") {
