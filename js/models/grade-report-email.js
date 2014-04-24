@@ -23,7 +23,11 @@ GradeReportEmail = Backbone.Model.extend({
 
     send: function() {
         $.get("api/index.php/sendmail", this.toJSON(), _.bind(function(response) {
-            if (!response.success) return;
+            if (!response.success) {
+                console.log("FAIL: Email to " + this.get("to") + " failed to send.");
+                return;
+            }
+            console.log("Email to " + this.get("to") + " successfully sent.");
             this.save("isSent", 1);
         }, this));
     }
