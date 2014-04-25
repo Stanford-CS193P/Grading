@@ -4,6 +4,7 @@ EventDispatcher = _.extend({}, Backbone.Events);
 Router = Backbone.Router.extend({
     routes: {
         "grade/:assignment": "gradeAssignment",
+        "grade/:assignment/:gradedForSunetid": "gradeAssignmentForSunetid",
         "overview/:assignment": "overviewAssignment",
         "late-days/:assignment": "lateDaysAssignment",
         "send-emails/:assignment": "sendEmailsAssignment"
@@ -15,6 +16,7 @@ AppView = Backbone.View.extend({
     el: "#app",
 
     appTemplate: _.template($('#app-template').html()),
+    gradeReportsTemplate: _.template($('#grade-reports-view-template').html()),
 
     initialize: function () {
         this.setUpRoutes();
@@ -42,6 +44,14 @@ AppView = Backbone.View.extend({
     setUpRoutes: function() {
         router.on("route:gradeAssignment", function(assignment) {
             this.assignment = parseInt(assignment, 10);
+            this.curGradedForSunetid = null;
+            this.renderContent = this.renderGradeReports;
+            this.renderContent();
+        }, this);
+
+        router.on("route:gradeAssignmentForSunetid", function(assignment, gradedForSunetid) {
+            this.assignment = parseInt(assignment, 10);
+            this.curGradedForSunetid = gradedForSunetid;
             this.renderContent = this.renderGradeReports;
             this.renderContent();
         }, this);
@@ -73,23 +83,42 @@ AppView = Backbone.View.extend({
 
     renderGradeReports: function () {
         this.$container.empty();
-        this.addAllGradeReports();
-    },
+        var gradeReports = this.gradeReports.where({assignment: this.assignment, gradedBySunetid: this.grader});
+        gradeReports = _.map(gradeReports, function(gradeReport) { return gradeReport.toJSON(); });
+        this.$container.html(this.gradeReportsTemplate({
+            gradeReports: gradeReports,
+            curGradedForSunetid: this.curGradedForSunetid
+        }));
 
-    addOneGradeReport: function (gradeReport) {
-        if (gradeReport.get("assignment") !== this.assignment) return;
-        if (gradeReport.get("gradedBySunetid") !== this.grader) return;
+        var $gradeReportsContainer = this.$(".grade-report-container");
+        if (!this.curGradedForSunetid) {
+            console.log("no this.curGradedForSunetid");
+            if (this.gradeReports.length == 0) return;
+            var nextGradedForSunetid = this.gradeReports.at(0).get("gradedForSunetid");
+            router.navigate("grade/" + this.assignment + "/" + nextGradedForSunetid,
+                {trigger: true, replace: true});
+            return;
+        }
 
+        var gradeReport = this.gradeReports.findWhere({
+            assignment: this.assignment,
+            gradedBySunetid: this.grader,
+            gradedForSunetid: this.curGradedForSunetid
+        });
+        if (!gradeReport) return;
+
+        var $gradeReportContainer = this.$(".grade-report-container");
         var view = new GradeReportView({model: gradeReport});
         var $elem = view.render().el;
-        this.$container.append($elem);
+        $gradeReportContainer.append($elem);
         gradeReport.on("destroy", function() {
             $elem.remove();
+            this.gradeReports.remove(gradeReport);
+            if (this.gradeReports.length == 0) return;
+            var nextGradedForSunetid = this.gradeReports.at(0).get("gradedForSunetid");
+            router.navigate("grade/" + this.assignment + "/" + nextGradedForSunetid,
+                {trigger: true, replace: false});
         }, this);
-    },
-
-    addAllGradeReports: function () {
-        this.gradeReports.each(this.addOneGradeReport, this);
     },
 
     renderOverview: function() {

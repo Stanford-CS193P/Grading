@@ -82,20 +82,43 @@
     </div>
 
     <div class="container">
-        <div class="loading-alert alert alert-info" style="text-align: center">
-            <h2>Loading grade reports...</h2>
+        <div class="loading-alert row">
+            <div class="col-xs-12">
+                <div class="alert alert-info" style="text-align: center">
+                    <h2>Loading grade reports...</h2>
+                </div>
+            </div>
         </div>
 
-        <div class="app-view-container">
+        <div class="app-view-container row">
         </div>
+
     </div>
 
 </script>
 
-<script type="text/template" id="grade-report-view-template">
-    <h1>Grade report for: <%= gradedForSunetid %></h1>
+<script type="text/template" id="grade-reports-view-template">
+    <div class="col-xs-2">
+        <ul class="nav nav-pills nav-stacked">
+            <% _.each(gradeReports, function(gradeReport) { %>
+            <li class="<%= gradeReport.gradedForSunetid === curGradedForSunetid ? 'active' : '' %>">
+                <a href="#grade/<%= gradeReport.assignment %>/<%= gradeReport.gradedForSunetid %>">
+                    <%= gradeReport.gradedForSunetid %>
+                </a>
+            </li>
+            <% }); %>
+        </ul>
+    </div>
 
-    <button class="no-submission btn btn-danger" style="margin-bottom: 10px;">No Submission</button>
+    <div class="col-xs-10 grade-report-container">
+    </div>
+</script>
+
+<script type="text/template" id="grade-report-view-template">
+    <h1>
+        Grade report for: <%= gradedForSunetid %>
+        <button class="no-submission btn btn-danger" style="margin-bottom: 10px;">No Submission</button>
+    </h1>
 
     <table class="table table-hover table-bordered">
         <tbody class="comment-table">
