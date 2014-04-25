@@ -72,6 +72,7 @@ INSERT INTO grade_reports (assignment, isSent, gradedBySunetid, gradedForSunetid
 INSERT INTO grade_reports (assignment, isSent, gradedBySunetid, gradedForSunetid) VALUES (3, 0, "garylee","dmelende");
 INSERT INTO grade_reports (assignment, isSent, gradedBySunetid, gradedForSunetid) VALUES (3, 0, "garylee","dchou1");
 INSERT INTO grade_reports (assignment, isSent, gradedBySunetid, gradedForSunetid) VALUES (3, 0, "garylee","eefield");
+INSERT INTO grade_reports (assignment, isSent, gradedBySunetid, gradedForSunetid) VALUES (3, 0, "garylee","cooperl1");
 
 INSERT INTO grade_reports (assignment, isSent, gradedBySunetid, gradedForSunetid) VALUES (3, 0, "jkevin","shaurya");
 INSERT INTO grade_reports (assignment, isSent, gradedBySunetid, gradedForSunetid) VALUES (3, 0, "jkevin","thuynyle");

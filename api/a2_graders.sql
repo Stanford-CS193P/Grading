@@ -89,3 +89,4 @@ INSERT INTO grade_reports (assignment, isSent, gradedBySunetid, gradedForSunetid
 INSERT INTO grade_reports (assignment, isSent, gradedBySunetid, gradedForSunetid) VALUES (2, 0, "jkevin","trzhao");
 INSERT INTO grade_reports (assignment, isSent, gradedBySunetid, gradedForSunetid) VALUES (2, 0, "jkevin","yctsai");
 INSERT INTO grade_reports (assignment, isSent, gradedBySunetid, gradedForSunetid) VALUES (2, 0, "jkevin","nbenavi");
+INSERT INTO grade_reports (assignment, isSent, gradedBySunetid, gradedForSunetid) VALUES (2, 0, "jismael","karchie");
