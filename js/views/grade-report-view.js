@@ -14,7 +14,6 @@ GradeReportView = Backbone.View.extend({
     },
 
     render: function () {
-        console.log(this.model.toJSON());
         this.$el.html(this.template(this.model.toJSON()));
         this.$table = this.$(".comment-table");
         this.$grade = this.$(".grade");
@@ -77,12 +76,10 @@ GradeReportView = Backbone.View.extend({
     },
 
     onChangeGrade: function() {
-        console.log(this.$grade.val());
         this.model.save("grade", this.$grade.val());
     },
 
     onChangeLateDayCount: function() {
-        console.log(this.$lateDayCount.val());
         this.model.save("lateDayCount", this.$lateDayCount.val());
     },
 

@@ -22,7 +22,6 @@ GradeReportReadonlyView = Backbone.View.extend({
         gradeReportsForAssignment = _.sortBy(gradeReportsForAssignment, function(report) {
            return report.gradedBySunetid + "||" + report.gradedForSunetid;
         });
-        console.log(gradeReportsForAssignment);
 
         this.$el.html(this.template({
             gradeReports: gradeReportsForAssignment,

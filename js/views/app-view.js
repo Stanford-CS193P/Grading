@@ -94,7 +94,6 @@ AppView = Backbone.View.extend({
 
         var $gradeReportsContainer = this.$(".grade-report-container");
         if (!this.curGradedForSunetid) {
-            console.log("no this.curGradedForSunetid");
             if (this.gradeReports.length == 0) return;
             var nextGradedForSunetid = this.gradeReports.at(0).get("gradedForSunetid");
             router.navigate("grade/" + this.assignment + "/" + nextGradedForSunetid,
