@@ -110,17 +110,33 @@ SQL;
             }
 
             if ($method == "PUT") {
-                $gradeReportID = SQLite3::escapeString($params["id"]);
-                $lateDayCount = SQLite3::escapeString($params["lateDayCount"]);
-                $grade = SQLite3::escapeString($params["grade"]);
-                $sql = "UPDATE grade_reports SET grade = '$grade', lateDayCount = $lateDayCount WHERE id = $gradeReportID";
-                $db = new DB();
-                $success = $db->exec($sql);
-                $response = array();
-                if ($success) {
-                    $response["lateDayCount"] = $lateDayCount;
-                    $response["grade"] = $grade;
+                if (!$params["id"]) {
+                  echo json_encode(array());
+                  return;
                 }
+                $gradeReportID = SQLite3::escapeString($params["id"]);
+
+                $db = new DB();
+                $response = array();
+
+                if ($params["lateDayCount"]) {
+                  $lateDayCount = SQLite3::escapeString($params["lateDayCount"]);
+                  $sql = "UPDATE grade_reports SET lateDayCount = $lateDayCount WHERE id = $gradeReportID";
+                  $success = $db->exec($sql);
+                  if ($success) {
+                      $response["lateDayCount"] = $lateDayCount;
+                  }
+                }
+
+                if ($params["grade"]) {
+                  $grade = SQLite3::escapeString($params["grade"]);
+                  $sql = "UPDATE grade_reports SET grade = '$grade' WHERE id = $gradeReportID";
+                  $success = $db->exec($sql);
+                  if ($success) {
+                      $response["grade"] = $grade;
+                  }
+                }
+
                 echo json_encode($response);
                 return;
             }
