@@ -34,11 +34,13 @@ AppView = Backbone.View.extend({
                 if (!comments) return;
                 this.listenTo(comments, "request", this.onRequest);
                 this.listenTo(comments, "sync", this.onSync);
+                this.listenTo(comments, "error", this.onError);
             }, this);
         }, this)});
 
         this.listenTo(this.gradeReports, "request", this.onRequest);
         this.listenTo(this.gradeReports, "sync", this.onSync);
+        this.listenTo(this.gradeReports, "error", this.onError);
     },
 
     setUpRoutes: function() {
@@ -156,6 +158,16 @@ AppView = Backbone.View.extend({
     },
 
     onError: function(model_or_collection, resp, options)  {
-        this.$saveIndicator.text("ERROR! Not saved. Try refreshing the page - might need to log in again...");
+        this.$saveIndicator.text("ERROR! Not saved.");
+
+        message = "Server error! Not saved.\n"+
+            "Try again, making sure that 'Saving...' turns into 'Saved!' in the navbar.\n"+
+            "Or, if you see 'Access forbidden' in the message from the server below, "+
+            "try refreshing the page - might need to log in to WebAuth again.\n";
+        if (model_or_collection && model_or_collection.attributes)
+          message += "\nObject that was not saved:\n" + JSON.stringify(model_or_collection.attributes) + "\n";
+        if (resp && resp.responseText)
+          message += "\nMessage from server:\n" + resp.responseText + "\n";
+        alert(message);
     }
 });
