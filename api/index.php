@@ -257,6 +257,9 @@ SQL;
         },
 
     'sendmail' => function ($method, $params, $urlElements) {
+            // TODO: this was a quick hack
+            $params = $_POST;
+
             $from = $params["from"];
             $to = $params["to"];
             $replyTo = $params["replyTo"];
