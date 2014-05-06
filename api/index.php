@@ -362,6 +362,7 @@ SQL;
             if ($email->send()) {
                 $response["success"] = true;
                 $response["message"] = "Message sent successfully!";
+                $response["recipient"] = $to;
             } else {
                 $response["success"] = false;
                 $response["errors"] = $email->get_errors();
