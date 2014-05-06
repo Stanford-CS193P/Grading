@@ -161,25 +161,32 @@ SQL;
                 $db = new DB();
                 $response = array();
 
-                if ($params["lateDayCount"]) {
-                  $lateDayCount = SQLite3::escapeString($params["lateDayCount"]);
-                  $sql = "UPDATE grade_reports SET lateDayCount = $lateDayCount WHERE id = $gradeReportID";
-                  $success = $db->exec($sql);
-                  if ($success) {
-                      $response["lateDayCount"] = $lateDayCount;
-                  }
+                $setStr = "";
+
+                if (array_key_exists("lateDayCount", $params) && $params["lateDayCount"]) {
+                    $lateDayCount = SQLite3::escapeString($params["lateDayCount"]);
+                    $setStr .= "lateDayCount = $lateDayCount";
+                    $response["lateDayCount"] = $lateDayCount;
+                } else {
+                    $setStr .= "lateDayCount = NULL";
+                    $response["lateDayCount"] = "";
                 }
 
-                if ($params["grade"]) {
-                  $grade = SQLite3::escapeString($params["grade"]);
-                  $sql = "UPDATE grade_reports SET grade = '$grade' WHERE id = $gradeReportID";
-                  $success = $db->exec($sql);
-                  if ($success) {
-                      $response["grade"] = $grade;
-                  }
+                if (array_key_exists("grade", $params)) {
+                    if (!is_string($params["grade"])) $params["grade"] = "";
+                    $grade = SQLite3::escapeString($params["grade"]);
+                    $setStr .= ", grade = '$grade'";
+                    $response["grade"] = $grade;
                 }
 
-                echo json_encode($response);
+                $sql = "UPDATE grade_reports SET $setStr WHERE id = $gradeReportID";
+                $success = $db->exec($sql);
+                if ($success) {
+                    echo json_encode($response);
+                    return;
+                }
+
+                echo json_encode(array());
                 return;
             }
 

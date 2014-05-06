@@ -39,12 +39,27 @@ AppView = Backbone.View.extend({
                 this.listenTo(comments, "request", this.onRequest);
                 this.listenTo(comments, "sync", this.onSync);
                 this.listenTo(comments, "error", this.onError);
+                this.listenTo(comments, "change", this.onCommentChange);
             }, this);
         }, this)});
 
         this.listenTo(this.gradeReports, "request", this.onRequest);
         this.listenTo(this.gradeReports, "sync", this.onSync);
         this.listenTo(this.gradeReports, "error", this.onError);
+
+        EventDispatcher.on("email", function(result) {
+            if (!this.$emailAlerts) return;
+
+            var alert = $("<div/>").addClass("alert");
+            if (result.success) {
+                alert.addClass("alert-success").text("Email to " + result.recipient + " successfully sent.");
+            } else {
+                alert.addClass("alert-danger").text("Email to " + result.recipient + " failed to send.");
+            }
+
+            this.$emailAlerts.append(alert);
+            _.delay(function(alert) { alert.fadeOut(300, function() { alert.remove(); }); }, 2000, alert);
+        }, this);
     },
 
     setUpRoutes: function() {
@@ -152,6 +167,7 @@ AppView = Backbone.View.extend({
             grader: this.grader
         });
         this.$container.append(view.render().el);
+        this.$emailAlerts = this.$(".email-alerts");
     },
 
     onRequest: function(model_or_collection, xhr, options) {
@@ -191,5 +207,10 @@ AppView = Backbone.View.extend({
             gradedBySunetid: this.grader });
         this.gradeReports.add(gradeReport);
         gradeReport.save({}, {success: _.bind(function(){ this.renderGradeReports(); }, this)});
+    },
+
+    onCommentChange: function(model) {
+        if (!model.get("isPublic")) return;
+        EventDispatcher.trigger("change:grade-report-comment:public", { id: model.id, text: model.get("text") });
     }
 });
