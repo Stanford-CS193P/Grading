@@ -6,7 +6,7 @@ GradeReportEmail = Backbone.Model.extend({
         this.set("isSent", gradeReport.get("isSent"));
         this.set("from", gradeReport.get("gradedBySunetid") + "@stanford.edu");
         this.set("replyTo", gradeReport.get("gradedBySunetid") + "@stanford.edu");
-        this.set("to", gradeReport.get("gradedForSunetid") + "@stanford.edu");
+        this.set("to", gradeReport.get("gradedForSunetid") .split(",").map(function(e) { return e + "@stanford.edu"; }).join(","));
         this.set("subject", "CS193P Grade Report - Assignment " + gradeReport.get("assignment"));
 
         var template = _.template($("#grade-report-email-template").html());

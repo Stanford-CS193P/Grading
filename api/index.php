@@ -59,12 +59,15 @@ $routes = array(
                 return;
             }
         },
+
     'user' => function () {
             global $USER;
             $response = array("user" => $USER);
             echo json_encode($response);
         },
+
     'grade-reports' => function ($method, $params, $urlElements) {
+
             if ($method == "GET") {
                 $db = new DB();
 
@@ -77,7 +80,6 @@ $routes = array(
                 foreach ($results as &$result) {
                     $gradeReportID = $result["id"];
                     $assignment = $result["assignment"];
-                    global $USER;
                     $sql = <<<SQL
 SELECT id, isPublic, author, commentText as text, commentType as type, value, popularity, position
 FROM grade_reports_comments JOIN comments ON comment_id = id
@@ -105,9 +107,49 @@ SQL;
                 return;
             }
 
-            if ($method == "POST") {
 
+            if ($method == "POST") {
+                $assignment = SQLite3::escapeString($params["assignment"]);
+                $gradedForSunetid = SQLite3::escapeString($params["gradedForSunetid"]);
+                $gradedBySunetid = SQLite3::escapeString($params["gradedBySunetid"]);
+
+                $sql = <<<SQL
+INSERT INTO grade_reports (assignment, isSent, gradedForSunetid, gradedBySunetid)
+VALUES ($assignment, 0, "$gradedForSunetid", "$gradedBySunetid")
+SQL;
+                $db = new DB();
+                $success = $db->query($sql);
+                if (!$success) {
+                    http_response_code(500);
+                    return;
+                }
+
+                $response = array();
+                $response["id"] = $db->lastInsertRowID();
+
+                $gradeReportID = $response["id"];
+                $sql = <<<SQL
+SELECT id, isPublic, author, commentText as text, commentType as type, popularity, position
+FROM comments
+WHERE id not in (select comment_id from grade_reports_comments WHERE grade_report_id = $gradeReportID)
+AND isPublic = 1 AND assignment = $assignment
+ORDER BY position ASC, type ASC, isPublic ASC, popularity DESC
+SQL;
+                $commentQuery = $db->query($sql);
+                $comments = array();
+                while ($row = $commentQuery->fetchArray(SQLITE3_ASSOC)) {
+                    $row["gradeReportID"] = $gradeReportID;
+                    $row["isPublic"] = $row["isPublic"] == 1 ? true : false;
+                    $row["value"] = "";
+                    array_push($comments, $row);
+                }
+                usort($comments, "commentCmp");
+                $response["comments"] = $comments;
+
+                echo json_encode($response);
+                return;
             }
+
 
             if ($method == "PUT") {
                 if (!$params["id"]) {
@@ -141,11 +183,21 @@ SQL;
                 return;
             }
 
+
             if ($method == "DELETE") {
                 if (count($urlElements) < 1) return;
                 $gradeReportID = SQLite3::escapeString($urlElements[0]);
+                $db = new DB();
+                $db->exec("DELETE FROM grade_reports WHERE id = $gradeReportID");
+                $db->exec("DELETE FROM grade_reports_comments WHERE grade_report_id = $gradeReportID");
+            }
+        },
 
-                $sql = <<<SQL
+    'grade-report-mark-as-not-submitted' => function($method, $params, $urlElements) {
+            if (count($urlElements) < 1) return;
+
+            $gradeReportID = SQLite3::escapeString($urlElements[0]);
+            $sql = <<<SQL
 INSERT INTO grade_reports_not_submitted
 (assignment, gradedBySunetid, gradedForSunetid)
 VALUES (
@@ -154,12 +206,14 @@ VALUES (
     (SELECT gradedForSunetid FROM grade_reports WHERE id = $gradeReportID)
 )
 SQL;
-                $db = new DB();
-                $db->exec($sql);
-                $db->exec("DELETE FROM grade_reports WHERE id = $gradeReportID");
-                $db->exec("DELETE FROM grade_reports_comments WHERE grade_report_id = $gradeReportID");
-            }
+            $db = new DB();
+            $success = $db->exec($sql);
+            $response = array();
+            $response["success"] = $success;
+            echo json_encode($response);
         },
+
+
     'grade-report-comments' => function ($method, $params, $urlElements) {
             if ($method == "GET") {
                 return;
@@ -231,6 +285,7 @@ SQL;
                 return;
             }
         },
+
     'comments' => function ($method, $params, $urlElements) {
             if ($method == "GET") {
                 $db = new DB();
@@ -267,12 +322,17 @@ SQL;
             $body = $params["body"];
 
             $email = new StanfordEmail();
-            $email->set_sender($from, $from);
-            $email->set_recipient($to, $to);
-            $email->set_subject($subject);
-            $email->add_bcc("bbunge@stanford.edu", "Brie");
-            $email->add_reply_to($replyTo, $replyTo);
 
+            $email->set_sender($from, $from);
+            $email->add_reply_to($replyTo, $replyTo);
+            $email->add_bcc("bbunge@stanford.edu", "Brie");
+
+            $to = explode(',', $to);
+            foreach ($to as $recipient) {
+                $email->add_recipient($recipient, $recipient);
+            }
+
+            $email->set_subject($subject);
             $email->set_body($body, $is_html = true);
 
             $response = array();

@@ -6,7 +6,8 @@ GradeReportView = Backbone.View.extend({
     events: {
         "change .grade": "onChangeGrade",
         "keyup .late-day-count": "onChangeLateDayCount",
-        "click .no-submission": "onClickNoSubmission"
+        "click .no-submission": "onClickNoSubmission",
+        "click .delete-submission": "onClickDeleteSubmission"
     },
 
     initialize: function () {
@@ -84,7 +85,15 @@ GradeReportView = Backbone.View.extend({
     },
 
     onClickNoSubmission: function() {
-        var isSure = confirm("Are you sure?");
+        var isSure = confirm("This will delete all entered data for this student and record that they didn't submit. Are you sure?");
+        if (!isSure) return;
+        $.get('api/index.php/grade-report-mark-as-not-submitted/' + this.model.id, _.bind(function(response) {
+            this.model.destroy();
+        }, this));
+    },
+
+    onClickDeleteSubmission: function() {
+        var isSure = confirm("This will delete all entered data for this student and remove them from your list. Are you sure?");
         if (!isSure) return;
         this.model.destroy();
     }

@@ -18,6 +18,10 @@ AppView = Backbone.View.extend({
     appTemplate: _.template($('#app-template').html()),
     gradeReportsTemplate: _.template($('#grade-reports-view-template').html()),
 
+    events: {
+        'click .add-grade-report': 'onAddGradeReport'
+    },
+
     initialize: function () {
         this.setUpRoutes();
         this.grader = window.USER;
@@ -94,10 +98,10 @@ AppView = Backbone.View.extend({
 
         var $gradeReportsContainer = this.$(".grade-report-container");
         if (!this.curGradedForSunetid) {
-            if (this.gradeReports.length == 0) return;
-            var nextGradedForSunetid = this.gradeReports.at(0).get("gradedForSunetid");
-            router.navigate("grade/" + this.assignment + "/" + nextGradedForSunetid,
-                {trigger: true, replace: true});
+            var url;
+            if (gradeReports.length == 0) url = "grade/" + this.assignment;
+            else url = "grade/" + this.assignment + "/" + gradeReports[0].gradedForSunetid;
+            router.navigate(url, {trigger: true, replace: true});
             return;
         }
 
@@ -115,10 +119,12 @@ AppView = Backbone.View.extend({
         gradeReport.on("destroy", function() {
             $elem.remove();
             this.gradeReports.remove(gradeReport);
-            if (this.gradeReports.length == 0) return;
-            var nextGradedForSunetid = this.gradeReports.at(0).get("gradedForSunetid");
-            router.navigate("grade/" + this.assignment + "/" + nextGradedForSunetid,
-                {trigger: true, replace: false});
+            var remainingGradeReports = this.gradeReports.where({assignment: this.assignment, gradedBySunetid: this.grader});
+
+            var url;
+            if (remainingGradeReports.length == 0) url = "grade/" + this.assignment;
+            else url = "grade/" + this.assignment + "/" + remainingGradeReports[0].get("gradedForSunetid");
+            router.navigate(url, {trigger: true, replace: true});
         }, this);
     },
 
@@ -167,6 +173,23 @@ AppView = Backbone.View.extend({
           message += "\nObject that was not saved:\n" + JSON.stringify(model_or_collection.attributes) + "\n";
         if (resp && resp.responseText)
           message += "\nMessage from server:\n" + resp.responseText + "\n";
+
         alert(message);
+    },
+
+    onAddGradeReport: function() {
+        var promptVal = prompt("What is the sunetid of the student you want to add?\n"+
+            "If this is a team, enter the sunetids separated by a comma (e.g. sunet1,sunet2)");
+        if (promptVal === null || promptVal === "") return;
+
+        // sanitize
+        var sunetids = promptVal.split(",").map(function(e) { return e.trim() }).join(",");
+
+        var gradeReport = new GradeReport({
+            assignment: this.assignment,
+            gradedForSunetid: sunetids,
+            gradedBySunetid: this.grader });
+        this.gradeReports.add(gradeReport);
+        gradeReport.save({}, {success: _.bind(function(){ this.renderGradeReports(); }, this)});
     }
 });
