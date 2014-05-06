@@ -28,24 +28,6 @@ AppView = Backbone.View.extend({
         this.renderContent = null;
         this.render();
 
-        this.gradeReports = new GradeReports();
-        this.gradeReports.fetch({reset: true, success: _.bind(function() {
-            this.$(".loading-alert").remove();
-            if (this.renderContent) this.renderContent();
-
-            this.gradeReports.each(function(report) {
-                var comments = report.get("comments");
-                if (!comments) return;
-                this.listenTo(comments, "request", this.onRequest);
-                this.listenTo(comments, "sync", this.onSync);
-                this.listenTo(comments, "error", this.onError);
-                this.listenTo(comments, "change", this.onCommentChange);
-            }, this);
-        }, this)});
-
-        this.listenTo(this.gradeReports, "request", this.onRequest);
-        this.listenTo(this.gradeReports, "sync", this.onSync);
-        this.listenTo(this.gradeReports, "error", this.onError);
 
         EventDispatcher.on("email", function(result) {
             if (!this.$emailAlerts) return;
@@ -64,42 +46,89 @@ AppView = Backbone.View.extend({
 
     setUpRoutes: function() {
         router.on("route:gradeAssignment", function(assignment) {
-            this.assignment = parseInt(assignment, 10);
             this.curGradedForSunetid = null;
             this.renderContent = this.renderGradeReports;
-            this.renderContent();
+            this.handleAssignmentRoute(assignment, true);
         }, this);
 
         router.on("route:gradeAssignmentForSunetid", function(assignment, gradedForSunetid) {
-            this.assignment = parseInt(assignment, 10);
             this.curGradedForSunetid = gradedForSunetid;
             this.renderContent = this.renderGradeReports;
-            this.renderContent();
+            this.handleAssignmentRoute(assignment, true);
         }, this);
 
         router.on("route:overviewAssignment", function(assignment) {
-            this.assignment = parseInt(assignment, 10);
             this.renderContent = this.renderOverview;
-            this.renderContent();
+            this.handleAssignmentRoute(assignment, false);
         }, this);
 
         router.on("route:lateDaysAssignment", function(assignment) {
-            this.assignment = parseInt(assignment, 10);
             this.renderContent = this.renderLateDays;
-            this.renderContent();
+            this.handleAssignmentRoute(assignment, true);
         }, this);
 
         router.on("route:sendEmailsAssignment", function(assignment) {
-            this.assignment = parseInt(assignment, 10);
             this.renderContent = this.renderSendEmails;
-            this.renderContent();
+            this.handleAssignmentRoute(assignment, false);
         }, this);
+    },
+
+    handleAssignmentRoute: function(assignment, filterByGrader) {
+        assignment = parseInt(assignment, 10);
+        if (this.assignment !== assignment || this.filterByGrader !== filterByGrader) {
+            this.assignment = assignment;
+            this.filterByGrader = filterByGrader;
+            this.fetchGradeReports();
+        } else {
+            this.renderContent();
+        }
+    },
+
+    fetchGradeReports: function() {
+        if (!this.assignment) return;
+
+        if (this.gradeReports) {
+            this.stopListening(this.gradeReports);
+            this.gradeReports.each(function(report) {
+                var comments = report.get("comments");
+                if (!comments) return;
+                this.stopListening(comments);
+            }, this);
+        }
+
+        this.gradeReports = new GradeReports();
+        this.gradeReports.url += "/" + this.assignment;
+        if (this.filterByGrader)
+            this.gradeReports.url += "/" + this.grader;
+
+        this.$(".loading-alert").show();
+        this.$container.empty();
+
+        this.gradeReports.fetch({reset: true, success: _.bind(function() {
+            this.$(".loading-alert").hide();
+            console.log("this.gradeReports.length", this.gradeReports.length);
+            if (this.renderContent) this.renderContent();
+
+            this.gradeReports.each(function(report) {
+                var comments = report.get("comments");
+                if (!comments) return;
+                this.listenTo(comments, "request", this.onRequest);
+                this.listenTo(comments, "sync", this.onSync);
+                this.listenTo(comments, "error", this.onError);
+                this.listenTo(comments, "change", this.onCommentChange);
+            }, this);
+        }, this)});
+
+        this.listenTo(this.gradeReports, "request", this.onRequest);
+        this.listenTo(this.gradeReports, "sync", this.onSync);
+        this.listenTo(this.gradeReports, "error", this.onError);
     },
 
     render: function() {
         this.$el.html(this.appTemplate({user: this.grader}));
         this.$container = this.$(".app-view-container");
         this.$saveIndicator = this.$(".save-indicator");
+        this.$(".loading-alert").hide();
     },
 
     renderGradeReports: function () {

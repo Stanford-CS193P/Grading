@@ -69,9 +69,22 @@ $routes = array(
     'grade-reports' => function ($method, $params, $urlElements) {
 
             if ($method == "GET") {
+                if (count($urlElements) < 1) return;
+                $assignment = SQLite3::escapeString($urlElements[0]);
+                $grader = null;
+                if (count($urlElements) >= 2)
+                    $grader = SQLite3::escapeString($urlElements[1]);
+
                 $db = new DB();
 
-                $result = $db->query('SELECT * FROM grade_reports ORDER BY gradedBySunetid ASC, gradedForSunetid ASC');
+                if ($grader) {
+                    $sql = "SELECT * FROM grade_reports WHERE assignment = $assignment AND gradedBySunetid = '$grader' ORDER BY gradedForSunetid ASC";
+                } else {
+                    $sql = "SELECT * FROM grade_reports WHERE assignment = $assignment ORDER BY gradedBySunetid ASC, gradedForSunetid ASC";
+                }
+
+                $result = $db->query($sql);
+
                 $results = array();
                 while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                     array_push($results, $row);
@@ -193,7 +206,10 @@ SQL;
 
             if ($method == "DELETE") {
                 if (count($urlElements) < 1) return;
-                $gradeReportID = SQLite3::escapeString($urlElements[0]);
+                // pop last element because we aren't sure whether the url is prefixed
+                // with the assignment and or grader. but, we know the last element is the
+                // grade report id.
+                $gradeReportID = SQLite3::escapeString(array_pop($urlElements));
                 $db = new DB();
                 $db->exec("DELETE FROM grade_reports WHERE id = $gradeReportID");
                 $db->exec("DELETE FROM grade_reports_comments WHERE grade_report_id = $gradeReportID");
