@@ -1,7 +1,8 @@
 GradeReport = Backbone.Model.extend({
     defaults: {
         lateDayCount: 0,
-        grade: ''
+        grade: '',
+        isSent: false
     },
 
     parse: function (response) {
