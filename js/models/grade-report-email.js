@@ -24,13 +24,15 @@ GradeReportEmail = Backbone.Model.extend({
     },
 
     send: function() {
+        EventDispatcher.trigger("email", { status: "IN_PROGRESS", recipient: this.get("to") });
+
         $.post("api/index.php/sendmail", this.toJSON(), _.bind(function(response) {
             if (!response.success) {
-                EventDispatcher.trigger("email", { success: false, recipient: this.get("to") });
+                EventDispatcher.trigger("email", { status: "FAIL", recipient: this.get("to") });
                 return;
             }
 
-            EventDispatcher.trigger("email", { success: true, recipient: this.get("to") });
+            EventDispatcher.trigger("email", { status: "SUCCESS", recipient: this.get("to") });
             this.save("isSent", 1);
         }, this));
     }

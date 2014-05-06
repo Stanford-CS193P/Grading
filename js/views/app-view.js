@@ -33,9 +33,11 @@ AppView = Backbone.View.extend({
             if (!this.$emailAlerts) return;
 
             var alert = $("<div/>").addClass("alert");
-            if (result.success) {
+            if (result.status === "IN_PROGRESS") {
+                alert.addClass("alert-warning").text("Sending email to " + result.recipient + "...");
+            } else if (result.status === "SUCCESS") {
                 alert.addClass("alert-success").text("Email to " + result.recipient + " successfully sent.");
-            } else {
+            } else if (result.status === "FAIL") {
                 alert.addClass("alert-danger").text("Email to " + result.recipient + " failed to send.");
             }
 
