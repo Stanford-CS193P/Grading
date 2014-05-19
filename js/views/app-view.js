@@ -203,10 +203,18 @@ AppView = Backbone.View.extend({
 
     onRequest: function(model_or_collection, xhr, options) {
         this.$saveIndicator.text("Saving...");
+        // Hack so that the UI doesn't get out of sync with the Server
+        // The delay here is so that newly rendered form fields get a chance
+        // to show up before the disable kicks in. There is a potential race
+        // condition here if the onSync is called before disable is set to
+        // true, then the disable kicks in. We won't worry about that for
+        // now because the Stanford hosting is so slow.
+        _.delay(function() { $("input,button,textarea,select").attr('disabled', true); }, 50);
     },
 
     onSync: function(model_or_collection, resp, options) {
         this.$saveIndicator.text("Saved!");
+        $("input,button,textarea,select").attr('disabled', false);
     },
 
     onError: function(model_or_collection, resp, options)  {
@@ -214,12 +222,13 @@ AppView = Backbone.View.extend({
 
         message = "Server error! Not saved.\n"+
             "Try again, making sure that 'Saving...' turns into 'Saved!' in the navbar.\n"+
-            "Or, if you see 'Access forbidden' in the message from the server below, "+
-            "try refreshing the page - might need to log in to WebAuth again.\n";
+            "Or, if you see 'Access forbidden' in the message from the server in the console, "+
+            "try refreshing the page - might need to log in to WebAuth again.\n" +
+            "Check the web inspector console for the full output of the error.";
         if (model_or_collection && model_or_collection.attributes)
-          message += "\nObject that was not saved:\n" + JSON.stringify(model_or_collection.attributes) + "\n";
+          console.log("Object that was not saved:\n" + JSON.stringify(model_or_collection.attributes));
         if (resp && resp.responseText)
-          message += "\nMessage from server:\n" + resp.responseText + "\n";
+          console.log("Message from server:\n" + resp.responseText);
 
         alert(message);
     },

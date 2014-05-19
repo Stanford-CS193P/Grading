@@ -14,6 +14,7 @@ GradeReportReadonlyView = Backbone.View.extend({
                 obj.comments = obj.comments.map(function(comment) {
                     var commentObj = comment.toJSON();
                     commentObj.type = comment.formattedType();
+                    commentObj.text = commentObj.text.replace(/\n/g, '<br />');
                     return commentObj;
                 });
             }

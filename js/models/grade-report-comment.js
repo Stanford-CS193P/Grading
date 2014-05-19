@@ -16,6 +16,14 @@ GradeReportComment = Backbone.Model.extend({
         return Backbone.Model.prototype.set.call(this, attributes, options);
     },
 
+    parse: function(response, options) {
+      console.log(response);
+      if (response.error) {
+        alert("DB Error: " + response.error);
+        delete response.error;
+      }
+    },
+
     formattedType: function () {
         return this.get("type").split("_")
             .map(function (e) {

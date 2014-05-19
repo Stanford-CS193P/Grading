@@ -176,7 +176,7 @@ SQL;
 
                 $setStr = "";
 
-                if (array_key_exists("lateDayCount", $params) && $params["lateDayCount"]) {
+                if (array_key_exists("lateDayCount", $params) && $params["lateDayCount"] !== "") {
                     $lateDayCount = SQLite3::escapeString($params["lateDayCount"]);
                     $setStr .= "lateDayCount = $lateDayCount";
                     $response["lateDayCount"] = $lateDayCount;
@@ -280,25 +280,33 @@ SQL;
                     "WHERE id = $commentID";
 
                 $db = new DB();
-                $successGradeReportComment = $db->exec($sqlGradeReportComment);
-                $successComment = $db->exec($sqlComment);
-
-                // TODO: make more effecient (only update this comment's popularity)
-                // Only consider popularity for "Other" comments
-                $sqlPopularity = "update comments set popularity = " .
-                    "(select count(*) from grade_reports_comments where comment_id = id and value = '1') " .
-                    "WHERE commentType = 'OTHER'";
-                $db->exec($sqlPopularity);
-
                 $response = array();
+                $response["error"] = "";
+
+                $successComment = $db->exec($sqlComment);
                 if ($successComment) {
                     $response["isPublic"] = $isPublic;
                     $response["text"] = $params["text"];
                     $response["type"] = $type;
+                } else {
+                    http_response_code(500);
+                    $response["error"] .= $db->lastErrorMsg();
                 }
+
+                $successGradeReportComment = $db->exec($sqlGradeReportComment);
                 if ($successGradeReportComment) {
                     $response["value"] = $value;
+                } else {
+                    http_response_code(500);
+                    $response["error"] .= $db->lastErrorMsg();
                 }
+
+                /* // TODO: make more effecient (only update this comment's popularity) */
+                /* // Only consider popularity for "Other" comments */
+                /* $sqlPopularity = "update comments set popularity = " . */
+                /*     "(select count(*) from grade_reports_comments where comment_id = id and value = '1') " . */
+                /*     "WHERE commentType = 'OTHER'"; */
+                /* $db->exec($sqlPopularity); */
 
                 echo json_encode($response);
                 return;

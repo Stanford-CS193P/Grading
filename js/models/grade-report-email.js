@@ -17,6 +17,7 @@ GradeReportEmail = Backbone.Model.extend({
                 data.type = comment.formattedType();
                 if (data.type === "Required Task") data.type = "Missing Required Tasks";
                 if (data.type === "Other") data.type = "Other Comments";
+                data.text = data.text.replace(/\n/g, '<br />');
                 return data;
             });
         }
