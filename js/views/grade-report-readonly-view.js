@@ -7,6 +7,7 @@ GradeReportReadonlyView = Parse.View.extend({
     },
 
     fetchGradeReports: function () {
+        $(".loading-alert").show();
         this.gradeReports = new GradeReports();
 
         var query = new Parse.Query(GradeReport);
@@ -17,6 +18,7 @@ GradeReportReadonlyView = Parse.View.extend({
             var count = this.gradeReports.length;
             if (count === 0) {
                 this.render();
+                $(".loading-alert").hide();
             }
 
             this.gradeReports.each(_.bind(function (gradeReport) {
@@ -24,6 +26,7 @@ GradeReportReadonlyView = Parse.View.extend({
                     count--;
                     if (count === 0) {
                         this.render();
+                        $(".loading-alert").hide();
                     }
                 }, this);
             }, this));

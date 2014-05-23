@@ -48,7 +48,6 @@ AppView = Parse.View.extend({
                 alert.addClass("alert-danger").text("Email to " + result.recipient + " failed to send.");
             }
 
-            console.log("appending");
             this.$emailAlerts.append(alert);
             _.delay(function (alert) {
                 alert.fadeOut(300, function () {
