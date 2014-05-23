@@ -10,7 +10,7 @@
             for (var field in comment) {
                 params[field] = comment[field];
             }
-            params.id = this.model.id;
+            params.id = this.model.get("comment").id;
             params.gradeReportID = this.model.get("gradeReport").id;
             return params;
         },
@@ -93,7 +93,7 @@
             var comment = this.model.get("comment");
 
             EventDispatcher.trigger("request");
-            this.model.save("text", newText).then(function() {
+            comment.save("text", newText).then(function() {
                 EventDispatcher.trigger("sync");
             }, function (error) {
                 alert("Error: " + error.code + " " + error.message);
