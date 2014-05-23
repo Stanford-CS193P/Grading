@@ -1,23 +1,50 @@
-GradeReportReadonlyView = Backbone.View.extend({
+GradeReportReadonlyView = Parse.View.extend({
     template: _.template($("#grade-report-readonly-view-template").html()),
 
     initialize: function(args) {
         this.assignment = args.assignment;
-        this.gradeReports = args.gradeReports;
+        this.fetchGradeReports();
+    },
+
+    fetchGradeReports: function () {
+        this.gradeReports = new GradeReports();
+
+        var query = new Parse.Query(GradeReport);
+        query.equalTo("assignment", this.assignment);
+        this.gradeReports.query = query;
+
+        this.gradeReports.fetch().then(_.bind(function() {
+            var count = this.gradeReports.length;
+            if (count === 0) {
+                this.render();
+            }
+
+            this.gradeReports.each(_.bind(function (gradeReport) {
+                gradeReport.fetchComments(function() {
+                    count--;
+                    if (count === 0) {
+                        this.render();
+                    }
+                }, this);
+            }, this));
+        }, this), function(error) {
+            alert("Error: " + error.code + " " + error.message);
+        });
     },
 
     render: function() {
-        var gradeReportsForAssignment = this.gradeReports.where({assignment: this.assignment});
-        gradeReportsForAssignment = _.map(gradeReportsForAssignment, function(model) {
-            var obj = model.toJSON();
-            if (obj.comments) {
-                obj.comments = obj.comments.map(function(comment) {
-                    var commentObj = comment.toJSON();
-                    commentObj.type = comment.formattedType();
-                    commentObj.text = commentObj.text.replace(/\n/g, '<br />');
-                    return commentObj;
-                });
-            }
+        var gradeReportsForAssignment = this.gradeReports.map(function(gradeReport) {
+            var obj = gradeReport.toJSON();
+
+            obj.comments = gradeReport.comments.map(function(gradeReportComment) {
+                var comment = gradeReportComment.get("comment");
+                var commentObj = comment.toJSON();
+                commentObj.type = comment.formattedType();
+                commentObj.text = commentObj.text.replace(/\n/g, '<br />');
+                commentObj.value = gradeReportComment.get("value");
+                return commentObj;
+            });
+
             return obj;
         });
         gradeReportsForAssignment = _.sortBy(gradeReportsForAssignment, function(report) {
@@ -28,6 +55,7 @@ GradeReportReadonlyView = Backbone.View.extend({
             gradeReports: gradeReportsForAssignment,
             assignment: this.assignment
         }));
+
         return this;
     }
 });

@@ -1,7 +1,7 @@
-EventDispatcher = _.extend({}, Backbone.Events);
+EventDispatcher = _.extend({}, Parse.Events);
 
 
-Router = Backbone.Router.extend({
+Router = Parse.Router.extend({
     routes: {
         "grade/:assignment": "gradeAssignment",
         "grade/:assignment/:gradedForSunetid": "gradeAssignmentForSunetid",
@@ -12,7 +12,7 @@ Router = Backbone.Router.extend({
 });
 var router = new Router();
 
-AppView = Backbone.View.extend({
+AppView = Parse.View.extend({
     el: "#app",
 
     appTemplate: _.template($('#app-template').html()),
@@ -23,13 +23,19 @@ AppView = Backbone.View.extend({
     },
 
     initialize: function () {
-        this.setUpRoutes();
         this.grader = window.USER;
         this.renderContent = null;
+
+        EventDispatcher.on("request", this.onRequest, this);
+        EventDispatcher.on("sync", this.onSync, this);
+
+        this.setUpRoutes();
+        this.setUpEmailAlert();
         this.render();
+    },
 
-
-        EventDispatcher.on("email", function(result) {
+    setUpEmailAlert: function () {
+        EventDispatcher.on("email", function (result) {
             if (!this.$emailAlerts) return;
 
             var alert = $("<div/>").addClass("alert");
@@ -42,215 +48,170 @@ AppView = Backbone.View.extend({
             }
 
             this.$emailAlerts.append(alert);
-            _.delay(function(alert) { alert.fadeOut(300, function() { alert.remove(); }); }, 2000, alert);
+            _.delay(function (alert) {
+                alert.fadeOut(300, function () {
+                    alert.remove();
+                });
+            }, 2000, alert);
         }, this);
     },
 
-    setUpRoutes: function() {
-        router.on("route:gradeAssignment", function(assignment) {
+    setUpRoutes: function () {
+        router.on("route:gradeAssignment", function (assignment) {
             this.curGradedForSunetid = null;
             this.renderContent = this.renderGradeReports;
-            this.handleAssignmentRoute(assignment, true);
+            this.handleAssignmentRoute(assignment);
         }, this);
 
-        router.on("route:gradeAssignmentForSunetid", function(assignment, gradedForSunetid) {
+        router.on("route:gradeAssignmentForSunetid", function (assignment, gradedForSunetid) {
             this.curGradedForSunetid = gradedForSunetid;
             this.renderContent = this.renderGradeReports;
-            this.handleAssignmentRoute(assignment, true);
+            this.handleAssignmentRoute(assignment);
         }, this);
 
-        router.on("route:overviewAssignment", function(assignment) {
+        router.on("route:overviewAssignment", function (assignment) {
             this.renderContent = this.renderOverview;
-            this.handleAssignmentRoute(assignment, false);
+            this.handleAssignmentRoute(assignment);
         }, this);
 
-        router.on("route:lateDaysAssignment", function(assignment) {
+        router.on("route:lateDaysAssignment", function (assignment) {
             this.renderContent = this.renderLateDays;
-            this.handleAssignmentRoute(assignment, true);
+            this.handleAssignmentRoute(assignment);
         }, this);
 
-        router.on("route:sendEmailsAssignment", function(assignment) {
+        router.on("route:sendEmailsAssignment", function (assignment) {
             this.renderContent = this.renderSendEmails;
-            this.handleAssignmentRoute(assignment, false);
+            this.handleAssignmentRoute(assignment);
         }, this);
     },
 
-    handleAssignmentRoute: function(assignment, filterByGrader) {
+    handleAssignmentRoute: function (assignment) {
         assignment = parseInt(assignment, 10);
-        if (this.assignment !== assignment || this.filterByGrader !== filterByGrader) {
+        if (assignment !== this.assignment) {
             this.assignment = assignment;
-            this.filterByGrader = filterByGrader;
-            this.fetchGradeReports();
+            this.fetchGradeReports(this.renderContent, this);
         } else {
             this.renderContent();
         }
     },
 
-    fetchGradeReports: function() {
-        if (!this.assignment) return;
-
-        if (this.gradeReports) {
-            this.stopListening(this.gradeReports);
-            this.gradeReports.each(function(report) {
-                var comments = report.get("comments");
-                if (!comments) return;
-                this.stopListening(comments);
-            }, this);
-        }
-
-        this.gradeReports = new GradeReports();
-        this.gradeReports.url += "/" + this.assignment;
-        if (this.filterByGrader)
-            this.gradeReports.url += "/" + this.grader;
-
-        this.$(".loading-alert").show();
-        this.$container.empty();
-
-        this.gradeReports.fetch({reset: true, success: _.bind(function() {
-            this.$(".loading-alert").hide();
-            console.log("this.gradeReports.length", this.gradeReports.length);
-            if (this.renderContent) this.renderContent();
-
-            this.gradeReports.each(function(report) {
-                var comments = report.get("comments");
-                if (!comments) return;
-                this.listenTo(comments, "request", this.onRequest);
-                this.listenTo(comments, "sync", this.onSync);
-                this.listenTo(comments, "error", this.onError);
-                this.listenTo(comments, "change", this.onCommentChange);
-            }, this);
-        }, this)});
-
-        this.listenTo(this.gradeReports, "request", this.onRequest);
-        this.listenTo(this.gradeReports, "sync", this.onSync);
-        this.listenTo(this.gradeReports, "error", this.onError);
-    },
-
-    render: function() {
+    render: function () {
         this.$el.html(this.appTemplate({user: this.grader}));
         this.$container = this.$(".app-view-container");
         this.$saveIndicator = this.$(".save-indicator");
-        this.$(".loading-alert").hide();
+        // TODO: remove this.$(".loading-alert").hide();
+    },
+
+    fetchGradeReports: function (onSuccess, context) {
+        if (!this.assignment || !this.grader) return;
+
+        this.$(".loading-alert").show();
+
+        var query = new Parse.Query(GradeReport);
+        query.equalTo("gradedBySunetid", this.grader);
+        query.equalTo("assignment", this.assignment);
+        this.gradeReports = new GradeReports();
+        this.gradeReports.query = query;
+        this.gradeReports.fetch({
+            success: function () {
+                this.$(".loading-alert").hide();
+                if (onSuccess) {
+                    onSuccess.call(context);
+                }
+            },
+            error: function (error) {
+                alert("Error: " + error.code + " " + error.message);
+            }
+        });
     },
 
     renderGradeReports: function () {
-        this.$container.empty();
-        var gradeReports = this.gradeReports.where({assignment: this.assignment, gradedBySunetid: this.grader});
-        gradeReports = _.map(gradeReports, function(gradeReport) { return gradeReport.toJSON(); });
-        this.$container.html(this.gradeReportsTemplate({
-            gradeReports: gradeReports,
-            curGradedForSunetid: this.curGradedForSunetid
-        }));
-
-        var $gradeReportsContainer = this.$(".grade-report-container");
-        if (!this.curGradedForSunetid) {
+        if (!this.curGradedForSunetid && this.gradeReports.length > 0) {
             var url;
-            if (gradeReports.length == 0) url = "grade/" + this.assignment;
-            else url = "grade/" + this.assignment + "/" + gradeReports[0].gradedForSunetid;
+            if (this.gradeReports.length == 0) url = "grade/" + this.assignment;
+            else url = "grade/" + this.assignment + "/" + this.gradeReports.at(0).get("gradedForSunetid");
             router.navigate(url, {trigger: true, replace: true});
             return;
         }
 
-        var gradeReport = this.gradeReports.findWhere({
-            assignment: this.assignment,
-            gradedBySunetid: this.grader,
-            gradedForSunetid: this.curGradedForSunetid
-        });
-        if (!gradeReport) return;
+        this.$container.html(this.gradeReportsTemplate({
+            gradeReports: this.gradeReports.map(function (gradeReport) {
+                return gradeReport.toJSON();
+            }),
+            curGradedForSunetid: this.curGradedForSunetid
+        }));
+
+        var gradeReport = this.gradeReports.filter(function (gradeReport) {
+            return gradeReport.get("gradedForSunetid") === this.curGradedForSunetid;
+        }, this);
+        if (gradeReport.length == 0) return;
+        gradeReport = gradeReport[0];
 
         var $gradeReportContainer = this.$(".grade-report-container");
         var view = new GradeReportView({model: gradeReport});
         var $elem = view.render().el;
         $gradeReportContainer.append($elem);
-        gradeReport.on("destroy", function() {
+
+        gradeReport.on("destroy", function () {
             $elem.remove();
             this.gradeReports.remove(gradeReport);
-            var remainingGradeReports = this.gradeReports.where({assignment: this.assignment, gradedBySunetid: this.grader});
 
             var url;
-            if (remainingGradeReports.length == 0) url = "grade/" + this.assignment;
-            else url = "grade/" + this.assignment + "/" + remainingGradeReports[0].get("gradedForSunetid");
+            if (this.gradeReports.length == 0) url = "grade/" + this.assignment;
+            else url = "grade/" + this.assignment + "/" + this.gradeReports.at(0).get("gradedForSunetid");
             router.navigate(url, {trigger: true, replace: true});
         }, this);
     },
 
-    renderOverview: function() {
+    renderOverview: function () {
         this.$container.empty();
-        var view = new GradeReportReadonlyView({ gradeReports: this.gradeReports, assignment: this.assignment });
+        var view = new GradeReportReadonlyView({ assignment: this.assignment });
         this.$container.append(view.render().el);
     },
 
-    renderLateDays: function() {
+    renderLateDays: function () {
         this.$container.empty();
-        var view = new LateDayView({
-            gradeReports: this.gradeReports,
-            assignment: this.assignment,
-            grader: this.grader
-        });
+        var view = new LateDayView({ gradeReports: this.gradeReports, assignment: this.assignment });
         this.$container.append(view.render().el);
     },
 
-    renderSendEmails: function() {
+    renderSendEmails: function () {
         this.$container.empty();
-        var view = new SendEmailView({
-            gradeReports: this.gradeReports,
-            assignment: this.assignment,
-            grader: this.grader
-        });
+        var view = new SendEmailView({ assignment: this.assignment });
         this.$container.append(view.render().el);
         this.$emailAlerts = this.$(".email-alerts");
     },
 
-    onRequest: function(model_or_collection, xhr, options) {
+    onRequest: function () {
         this.$saveIndicator.text("Saving...");
-        // Hack so that the UI doesn't get out of sync with the Server
-        // The delay here is so that newly rendered form fields get a chance
-        // to show up before the disable kicks in. There is a potential race
-        // condition here if the onSync is called before disable is set to
-        // true, then the disable kicks in. We won't worry about that for
-        // now because the Stanford hosting is so slow.
-        _.delay(function() { $("input,button,textarea,select").attr('disabled', true); }, 50);
     },
 
-    onSync: function(model_or_collection, resp, options) {
+    onSync: function () {
         this.$saveIndicator.text("Saved!");
-        $("input,button,textarea,select").attr('disabled', false);
     },
 
-    onError: function(model_or_collection, resp, options)  {
-        this.$saveIndicator.text("ERROR! Not saved.");
-
-        message = "Server error! Not saved.\n"+
-            "Try again, making sure that 'Saving...' turns into 'Saved!' in the navbar.\n"+
-            "Or, if you see 'Access forbidden' in the message from the server in the console, "+
-            "try refreshing the page - might need to log in to WebAuth again.\n" +
-            "Check the web inspector console for the full output of the error.";
-        if (model_or_collection && model_or_collection.attributes)
-          console.log("Object that was not saved:\n" + JSON.stringify(model_or_collection.attributes));
-        if (resp && resp.responseText)
-          console.log("Message from server:\n" + resp.responseText);
-
-        alert(message);
-    },
-
-    onAddGradeReport: function() {
-        var promptVal = prompt("What is the sunetid of the student you want to add?\n"+
+    onAddGradeReport: function () {
+        var promptVal = prompt("What is the sunetid of the student you want to add?\n" +
             "If this is a team, enter the sunetids separated by a comma (e.g. sunet1,sunet2)");
         if (promptVal === null || promptVal === "") return;
 
         // sanitize
-        var sunetids = promptVal.split(",").map(function(e) { return e.trim() }).join(",");
+        var sunetids = promptVal.split(",").map(function (e) {
+            return e.trim()
+        }).join(",");
 
-        var gradeReport = new GradeReport({
+        var gradeReport = new GradeReport();
+        EventDispatcher.trigger("request");
+        gradeReport.save({
             assignment: this.assignment,
             gradedForSunetid: sunetids,
-            gradedBySunetid: this.grader });
+            gradedBySunetid: this.grader
+        }).then(_.bind(function () {
+            EventDispatcher.trigger("sync");
+            this.renderGradeReports();
+        }, this), function (error) {
+            alert("Error: " + error.code + " " + error.message);
+        });
         this.gradeReports.add(gradeReport);
-        gradeReport.save({}, {success: _.bind(function(){ this.renderGradeReports(); }, this)});
-    },
-
-    onCommentChange: function(model) {
-        if (!model.get("isPublic")) return;
-        EventDispatcher.trigger("change:grade-report-comment:public", { id: model.id, text: model.get("text") });
     }
 });

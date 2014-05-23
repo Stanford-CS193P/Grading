@@ -38,6 +38,7 @@
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Grade <b class="caret"></b></a>
                         <ul class="dropdown-menu">
+                            <li><a href="#grade/6">Assignment 6</a></li>
                             <li><a href="#grade/5">Assignment 5</a></li>
                             <li><a href="#grade/4">Assignment 4</a></li>
                             <li><a href="#grade/3">Assignment 3</a></li>
@@ -49,6 +50,7 @@
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Late Days <b class="caret"></b></a>
                         <ul class="dropdown-menu">
+                            <li><a href="#late-days/6">Assignment 6</a></li>
                             <li><a href="#late-days/5">Assignment 5</a></li>
                             <li><a href="#late-days/4">Assignment 4</a></li>
                             <li><a href="#late-days/3">Assignment 3</a></li>
@@ -60,6 +62,7 @@
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Overview <b class="caret"></b></a>
                         <ul class="dropdown-menu">
+                            <li><a href="#overview/6">Assignment 6</a></li>
                             <li><a href="#overview/5">Assignment 5</a></li>
                             <li><a href="#overview/4">Assignment 4</a></li>
                             <li><a href="#overview/3">Assignment 3</a></li>
@@ -71,6 +74,7 @@
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Send Emails <b class="caret"></b></a>
                         <ul class="dropdown-menu">
+                            <li><a href="#send-emails/6">Assignment 6</a></li>
                             <li><a href="#send-emails/5">Assignment 5</a></li>
                             <li><a href="#send-emails/4">Assignment 4</a></li>
                             <li><a href="#send-emails/3">Assignment 3</a></li>
@@ -127,7 +131,6 @@
 <script type="text/template" id="grade-report-view-template">
     <h1>
         Grade report for: <%= gradedForSunetid %>
-        <button class="no-submission btn btn-sm btn-warning" style="margin-bottom: 10px;">No Submission</button>
         <button class="delete-submission btn btn-sm btn-danger" style="margin-bottom: 10px;">Delete Student</button>
     </h1>
 
@@ -152,7 +155,10 @@
         <tr>
             <td><strong>Late Days</strong></td>
             <td>
-                <input class="late-day-count form-control" type="text" placeholder="Late Day Count" value="<%= lateDayCount %>" />
+                <input class="late-day-count form-control"
+                       type="text"
+                       placeholder="Late Day Count"
+                       value="<%= typeof(lateDayCount) === 'undefined' ? '' : lateDayCount %>" />
             </td>
         </tr>
 
@@ -250,7 +256,7 @@
     <td class="<%= value === '1' ? 'info' : '' %>">
         <div class="checkbox">
             <label>
-                <input class="comment-applies" type="checkbox" name="<%= id %>" value="1" <%= value === "1" ? "checked" : "" %>>
+                <input class="comment-applies" type="checkbox" name="<%= objectId %>" value="1" <%= value === "1" ? "checked" : "" %>>
                 This comment applies
             </label>
         </div>
@@ -290,7 +296,7 @@
             <td><%= gradeReport.gradedBySunetid %></td>
             <td><%= gradeReport.gradedForSunetid %></td>
             <td><%= gradeReport.grade %></td>
-            <td><%= gradeReport.lateDayCount %></td>
+            <td><%= typeof(gradeReport.lateDayCount) === 'undefined' ? '' : gradeReport.lateDayCount %></td>
             <td>
                 <% var curType = null; %>
                 <% _.each(gradeReport.comments, function(comment) { %>
@@ -335,7 +341,7 @@
 
 <script type="text/template" id="late-day-item-view-template">
     <td><%= gradedForSunetid %></td>
-    <td><input class="form-control" type="text" value="<%= lateDayCount %>"></input></td>
+    <td><input class="form-control" type="text" value="<%= typeof(lateDayCount) === 'undefined' ? '' : lateDayCount %>"></input></td>
 </script>
 
 <script type="text/template" id="send-email-view-template">
@@ -360,7 +366,7 @@
     <td>
         <button class="send-email btn btn-default">Send email</button>
     </td>
-    <td><%= isSent == 0 ? "No" : "Yes" %></td>
+    <td><%= isSent ? "Yes" : "No" %></td>
     <td>
         <strong>From:</strong> <%= from %><br>
         <strong>To:</strong> <%= to %><br>
@@ -373,8 +379,8 @@
 <script type="text/template" id="grade-report-email-template">
     <p><strong>Graded by:</strong> <%= gradedBySunetid %></p>
     <p><strong>Graded for:</strong> <%= gradedForSunetid %></p>
-    <p><strong>Grade:</strong> <%= grade %></p>
-    <p><strong>Late Days:</strong> <%= lateDayCount %></p>
+    <p><strong>Grade:</strong> <%= typeof(grade) === "undefined" ? "" : grade %></p>
+    <p><strong>Late Days:</strong> <%= typeof(lateDayCount) === "undefined" ? "" : lateDayCount %></p>
 
     <p>
         <% var curType = null; %>
@@ -400,21 +406,18 @@
     </p>
 </script>
 
-<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js"></script>
-<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+<script src="js/lib/jquery-1.11.0.js"></script>
+<script src="js/lib/underscore.js"></script>
+<script src="js/lib/bootstrap.js"></script>
+<script src="js/lib/parse-1.2.18.js"></script>
 
+<script src="js/models/comment.js"></script>
 <script src="js/models/grade-report-comment.js"></script>
 <script src="js/models/grade-report.js"></script>
-<script src="js/models/grade-report-email.js"></script>
+<script src="js/collections/comments.js"></script>
 <script src="js/collections/grade-report-comments.js"></script>
 <script src="js/collections/grade-reports.js"></script>
-<script src="js/views/grade-report-required-task-comment-view.js"></script>
-<script src="js/views/grade-report-evaluation-comment-view.js"></script>
-<script src="js/views/grade-report-extra-credit-comment-view.js"></script>
-<script src="js/views/grade-report-other-comment-create-view.js"></script>
-<script src="js/views/grade-report-other-comment-view.js"></script>
+<script src="js/views/grade-report-comment-view.js"></script>
 <script src="js/views/grade-report-view.js"></script>
 <script src="js/views/grade-report-readonly-view.js"></script>
 <script src="js/views/late-day-view.js"></script>
@@ -422,14 +425,17 @@
 <script src="js/views/app-view.js"></script>
 
 <script>
+    Parse.initialize("DwL6Xc95EIQPSketONgcsaUOXD1HJ41Rgm8VBIeq", "7rhuu2liFvpYbiJ2Usu9L0U5oSNA9lpUk8ilWnaN");
+
     $(function () {
         // Note that this authorization scheme can be easily bypassed.
         // This wasn't seen as an issue because the whole site is only
-        // accessible by the course staff, who are deemed trustworthy.
+        // accessible by the course staff, who are deemed trustworthy,
+        // via htaccess.
         $.get('api/index.php/user', function (result) {
             window.USER = result.user;
             var app = new AppView();
-            Backbone.history.start();
+            Parse.history.start();
         });
     });
 </script>

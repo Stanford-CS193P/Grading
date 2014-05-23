@@ -1,4 +1,4 @@
-GradeReportView = Backbone.View.extend({
+GradeReportView = Parse.View.extend({
 
     template: _.template($("#grade-report-view-template").html()),
     headerTemplate: _.template($("#grade-report-view-table-header-template").html()),
@@ -6,12 +6,11 @@ GradeReportView = Backbone.View.extend({
     events: {
         "change .grade": "onChangeGrade",
         "keyup .late-day-count": "onChangeLateDayCount",
-        "click .no-submission": "onClickNoSubmission",
         "click .delete-submission": "onClickDeleteSubmission"
     },
 
     initialize: function () {
-        EventDispatcher.on("add:grade-report-comment:public", this.onAddGradeReportComment, this);
+        this.model.fetchComments(this.render, this);
     },
 
     render: function () {
@@ -20,34 +19,34 @@ GradeReportView = Backbone.View.extend({
         this.$grade = this.$(".grade");
         this.$lateDayCount = this.$(".late-day-count");
 
-        this.$grade.find("option").each(_.bind(function(ignored, elem) {
+        this.$grade.find("option").each(_.bind(function (ignored, elem) {
             elem = $(elem);
             if ((!this.model.get("grade") && elem.text() === "TODO") ||
-                   (this.model.get("grade") && elem.text() === this.model.get("grade"))) {
+                (this.model.get("grade") && elem.text() === this.model.get("grade"))) {
                 elem.prop("selected", true);
             }
         }, this));
 
-        var view = new GradeReportOtherCommentCreateView({assignment:this.model.get("assignment")});
+        var view = new GradeReportOtherCommentCreateView({assignment: this.model.get("assignment")});
         this.$addComment = $(view.render().el).appendTo(this.$table);
-        view.on("add:grade-report-comment:non-public", this.onAddGradeReportCommentNonPublic, this);
+        view.on("add:grade-report-comment", this.onAddGradeReportComment, this);
 
-        var comments = this.model.get("comments");
         var curType = null;
-        comments.each(function (comment) {
+        this.model.comments.each(_.bind(function (gradeReportComment) {
+            var comment = gradeReportComment.get("comment");
             if (comment.get("type") !== curType) {
                 curType = comment.get("type");
                 this.$addComment.before(this.headerTemplate({header: comment.formattedType()}));
             }
-
-            this.renderComment(comment);
-        }, this);
+            this.renderComment(gradeReportComment);
+        }, this));
 
         return this;
     },
 
-    renderComment: function(comment) {
+    renderComment: function (gradeReportComment) {
         var viewClass;
+        var comment = gradeReportComment.get("comment");
         if (comment.get("type") === "REQUIRED_TASK")
             viewClass = GradeReportRequiredTaskCommentView;
         else if (comment.get("type") === "EVALUATION")
@@ -58,43 +57,49 @@ GradeReportView = Backbone.View.extend({
             viewClass = GradeReportOtherCommentView;
         if (!viewClass) return;
 
-        var view = new viewClass({ model: comment });
+        var view = new viewClass({ model: gradeReportComment });
         this.$addComment.before(view.render().el);
     },
 
-    onAddGradeReportComment: function(comment) {
-        var myComment = comment.clone();
-        myComment.set("gradeReportID", this.model.id);
-        this.model.get("comments").add(myComment);
-        this.renderComment(myComment);
+    onAddGradeReportComment: function (gradeReportComment) {
+        gradeReportComment.set("gradeReport", this.model);
+
+        EventDispatcher.trigger("request");
+        gradeReportComment.save("value", "1").then(_.bind(function () {
+            EventDispatcher.trigger("sync");
+            this.model.comments.add(gradeReportComment);
+        }, this), function (error) {
+            alert("Error: " + error.code + " " + error.message);
+        });
+
+        this.renderComment(gradeReportComment);
     },
 
-    onAddGradeReportCommentNonPublic: function(comment) {
-        comment.set("gradeReportID", this.model.id);
-        this.model.get("comments").add(comment);
-        comment.save("value", "1");
-        this.renderComment(comment);
+    onChangeGrade: function () {
+        EventDispatcher.trigger("request");
+        this.model.save("grade", this.$grade.val()).then(function() {
+            EventDispatcher.trigger("sync");
+        }, function (error) {
+            alert("Error: " + error.code + " " + error.message);
+        });
     },
 
-    onChangeGrade: function() {
-        this.model.save("grade", this.$grade.val());
+    onChangeLateDayCount: function (event) {
+        if (event.which == 13) return;
+
+        EventDispatcher.trigger("request");
+        this.model.save("lateDayCount", parseInt(this.$lateDayCount.val(), 10)).then(function() {
+            EventDispatcher.trigger("sync");
+        }, function (error) {
+            alert("Error: " + error.code + " " + error.message);
+        });
     },
 
-    onChangeLateDayCount: function() {
-        this.model.save("lateDayCount", this.$lateDayCount.val());
-    },
-
-    onClickNoSubmission: function() {
-        var isSure = confirm("This will delete all entered data for this student and record that they didn't submit. Are you sure?");
+    onClickDeleteSubmission: function () {
+        var isSure = confirm("This will delete all entered data for this student and remove them from your list. " +
+            "Are you sure?");
         if (!isSure) return;
-        $.get('api/index.php/grade-report-mark-as-not-submitted/' + this.model.id, _.bind(function(response) {
-            this.model.destroy();
-        }, this));
-    },
 
-    onClickDeleteSubmission: function() {
-        var isSure = confirm("This will delete all entered data for this student and remove them from your list. Are you sure?");
-        if (!isSure) return;
         this.model.destroy();
     }
 

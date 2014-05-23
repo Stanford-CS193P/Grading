@@ -1,4 +1,4 @@
-LateDayItemView = Backbone.View.extend({
+LateDayItemView = Parse.View.extend({
     tagName: 'tr',
 
     template: _.template($("#late-day-item-view-template").html()),
@@ -14,17 +14,21 @@ LateDayItemView = Backbone.View.extend({
     },
 
     onChangeLateDayCount: function() {
-        this.model.save("lateDayCount", this.$input.val());
+        EventDispatcher.trigger("request");
+        this.model.save("lateDayCount", parseInt(this.$input.val(), 10)).then(function() {
+            EventDispatcher.trigger("sync");
+        }, function (error) {
+            alert("Error: " + error.code + " " + error.message);
+        });
     }
 });
 
-LateDayView = Backbone.View.extend({
+LateDayView = Parse.View.extend({
     template: _.template($("#late-day-view-template").html()),
 
     initialize: function (args) {
         this.assignment = args.assignment;
         this.gradeReports = args.gradeReports;
-        this.grader = args.grader;
     },
 
     render: function () {
@@ -32,9 +36,6 @@ LateDayView = Backbone.View.extend({
         this.$table = this.$(".late-day-table");
 
         this.gradeReports.each(function(gradeReport) {
-            if (gradeReport.get("assignment") !== this.assignment) return;
-            if (gradeReport.get("gradedBySunetid") !== this.grader) return;
-
             var view = new LateDayItemView({model: gradeReport});
             this.$table.append(view.render().el);
         }, this);
