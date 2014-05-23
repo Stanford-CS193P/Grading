@@ -30,12 +30,13 @@ AppView = Parse.View.extend({
         EventDispatcher.on("sync", this.onSync, this);
 
         this.setUpRoutes();
-        this.setUpEmailAlert();
         this.render();
+        this.setUpEmailAlert();
     },
 
     setUpEmailAlert: function () {
         EventDispatcher.on("email", function (result) {
+            this.$emailAlerts = this.$(".email-alerts");
             if (!this.$emailAlerts) return;
 
             var alert = $("<div/>").addClass("alert");
@@ -47,6 +48,7 @@ AppView = Parse.View.extend({
                 alert.addClass("alert-danger").text("Email to " + result.recipient + " failed to send.");
             }
 
+            console.log("appending");
             this.$emailAlerts.append(alert);
             _.delay(function (alert) {
                 alert.fadeOut(300, function () {
