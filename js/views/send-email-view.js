@@ -8,7 +8,7 @@ SendEmailItemView = Parse.View.extend({
 
     initialize: function() {
         this.email = this.createEmailFromGradeReport(this.model);
-        EventDispatcher.on("email:send-if-unsent", this.sendEmail, this);
+        EventDispatcher.on("email:send-if-unsent", this.sendEmailIfUnsent, this);
         this.model.on("change:isSent", this.render, this);
     },
 
@@ -37,6 +37,14 @@ SendEmailItemView = Parse.View.extend({
             EventDispatcher.trigger("email", { status: "SUCCESS", recipient: this.email.to });
             this.model.save("isSent", 1);
         }, this));
+    },
+
+    sendEmailIfUnsent: function() {
+        if (this.model.get("isSent")) {
+            console.log("Skipping for " + this.model.get("gradedForSunetid") + " because already sent.");
+            return;
+        }
+        this.sendEmail();
     },
 
     createEmailFromGradeReport: function(gradeReport) {

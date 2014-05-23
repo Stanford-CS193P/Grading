@@ -6,6 +6,7 @@ Comments = Parse.Collection.extend({
     fetchAllComments: function(assignment, onSuccess, context) {
         var queryAllComments = new Parse.Query(Comment);
         queryAllComments.equalTo("assignment", assignment);
+        queryAllComments.ascending("position");
         var allComments = new Comments();
         allComments.query = queryAllComments;
         allComments.fetch({

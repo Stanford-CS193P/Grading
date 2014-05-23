@@ -2,23 +2,25 @@ GradeReportComments = Parse.Collection.extend({
     model: GradeReportComment,
 
     comparator: function (gradeReportComment) {
-        var sortStr = "";
+        var sortBy = 0;
 
         var comment = gradeReportComment.get("comment");
         if (comment.get("type") === "REQUIRED_TASK")
-            sortStr += "0";
+            sortBy += 1;
         else if (comment.get("type") === "EVALUATION")
-            sortStr += "1";
+            sortBy += 2;
         else if (comment.get("type") === "EXTRA_CREDIT")
-            sortStr += "2";
+            sortBy += 3;
         else if (comment.get("type") === "OTHER")
-            sortStr += "3";
+            sortBy += 4;
         else
-            sortStr += "4";
+            sortBy += 5;
 
-        sortStr += "-" + (typeof(comment.get("position")) === "undefined" ? "0" : comment.get("position"));
-        sortStr += "-" + (typeof(comment.get("popularity")) === "undefined" ? "0" : comment.get("popularity"));
+        sortBy *= 10000;
+        sortBy += (typeof(comment.get("position")) === "undefined" ? 1 : comment.get("position"));
+        sortBy *= 10000;
+        sortBy += (typeof(comment.get("popularity")) === "undefined" ? 1 : comment.get("popularity"));
 
-        return sortStr;
+        return sortBy;
     }
 });
