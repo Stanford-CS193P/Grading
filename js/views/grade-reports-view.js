@@ -85,7 +85,8 @@ GradeReportsView = Parse.View.extend({
         gradeReport.save({
             assignment: this.assignment,
             gradedForSunetid: sunetids,
-            gradedBySunetid: this.gradedBySunetid
+            gradedBySunetid: this.gradedBySunetid,
+            isSent: 0
         }).then(_.bind(function () {
             var url = "grade/" + this.assignment + "/" + sunetids;
             router.navigate(url, {trigger: false, replace: true});
