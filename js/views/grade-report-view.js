@@ -9,6 +9,14 @@ GradeReportView = Parse.View.extend({
         "click .delete-submission": "onClickDeleteSubmission"
     },
 
+
+    initialize: function() {
+        GradeReport.fetchOtherComments(this.model, function () {
+            this.render();
+        }, this);
+    },
+
+
     render: function () {
         this.$el.html(this.template(this.model.toJSON()));
         this.$table = this.$(".comment-table");
