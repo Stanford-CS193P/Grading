@@ -115,6 +115,8 @@
 
         initialize: function (args) {
             this.assignment = args.assignment;
+            this.gradedBySunetid = args.gradedBySunetid;
+            this.gradedForSunetid = args.gradedForSunetid;
         },
 
         render: function () {
@@ -137,7 +139,10 @@
 
             var gradeReportComment = new GradeReportComment({
                 value: "0",
-                comment: comment
+                comment: comment,
+                assignment: this.assignment,
+                gradedBySunetid: this.gradedBySunetid,
+                gradedForSunetid: this.gradedForSunetid
             });
 
             EventDispatcher.trigger("request");

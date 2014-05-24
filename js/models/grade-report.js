@@ -34,6 +34,9 @@ GradeReport = Parse.Object.extend("GradeReport", {
 
                 this.unusedComments.each(_.bind(function(comment) {
                     var gradeReportComment = new GradeReportComment({
+                        assignment: this.get("assignment"),
+                        gradedBySunetid: this.get("gradedBySunetid"),
+                        gradedForSunetid: this.get("gradedForSunetid"),
                         gradeReport: this,
                         comment: comment,
                         value: ""

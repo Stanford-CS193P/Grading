@@ -27,7 +27,11 @@ GradeReportView = Parse.View.extend({
             }
         }, this));
 
-        var view = new GradeReportOtherCommentCreateView({assignment: this.model.get("assignment")});
+        var view = new GradeReportOtherCommentCreateView({
+            assignment: this.model.get("assignment"),
+            gradedBySunetid: this.model.get("gradedBySunetid"),
+            gradedForSunetid: this.model.get("gradedForSunetid")
+        });
         this.$addComment = $(view.render().el).appendTo(this.$table);
         view.on("add:grade-report-comment", this.onAddGradeReportComment, this);
 
