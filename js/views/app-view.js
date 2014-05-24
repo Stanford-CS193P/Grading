@@ -32,6 +32,7 @@ AppView = Parse.View.extend({
 
     setUpEmailAlert: function () {
         EventDispatcher.on("email", function (result) {
+            this.$emailAlerts = this.$(".email-alerts");
             if (!this.$emailAlerts) return;
 
             var alert = $("<div/>").addClass("alert");
@@ -131,7 +132,6 @@ AppView = Parse.View.extend({
             assignment: this.assignment
         });
         this.$container.append(view.render().el);
-        this.$emailAlerts = this.$(".email-alerts");
     },
 
     onRequest: function () {
