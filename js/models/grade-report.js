@@ -135,11 +135,11 @@ GradeReport = Parse.Object.extend("GradeReport", {
     refreshOtherComments: function(gradeReport, gradeReportComments, comments, callback, context) {
         console.log("refreshOtherComments");
 
-        var commentsForGradeReport = gradeReport.comments.filter(function(gradeReportComment) {
+        var commentsToKeep = gradeReport.comments.filter(function(gradeReportComment) {
             return gradeReportComment.get("comment").get("type") !== "OTHER";
         });
         gradeReport.comments = new GradeReportComments();
-        _.each(commentsForGradeReport, function(gradeReportComment) {
+        _.each(commentsToKeep, function(gradeReportComment) {
             gradeReport.comments.add(gradeReportComment);
         });
 
