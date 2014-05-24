@@ -139,10 +139,7 @@
 
             var gradeReportComment = new GradeReportComment({
                 value: "0",
-                comment: comment,
-                assignment: this.assignment,
-                gradedBySunetid: this.gradedBySunetid,
-                gradedForSunetid: this.gradedForSunetid
+                comment: comment
             });
 
             EventDispatcher.trigger("request");

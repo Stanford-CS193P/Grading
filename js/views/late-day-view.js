@@ -28,7 +28,16 @@ LateDayView = Parse.View.extend({
 
     initialize: function (args) {
         this.assignment = args.assignment;
-        this.gradeReports = args.gradeReports;
+        this.gradedBySunetid = args.gradedBySunetid;
+
+        this.gradeReports = new GradeReports();
+        GradeReport.fetchGradeReports([
+            { key: "assignment", value: this.assignment },
+            { key: "gradedBySunetid", value: this.gradedBySunetid }
+        ], function (gradeReports) {
+            this.gradeReports = gradeReports;
+            this.render();
+        }, this);
     },
 
     render: function () {

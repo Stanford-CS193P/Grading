@@ -3,84 +3,93 @@ GradeReport = Parse.Object.extend("GradeReport", {
 
     initialize: function (attrs, options) {
         this.comments = null;
-    },
-
-    fetchComments: function(callback, context) {
-        this.comments = new GradeReportComments();
-
-        var query = new Parse.Query(GradeReportComment);
-        query.equalTo("gradeReport", this);
-        this.comments.query = query;
-
-        this.comments.fetch().then(_.bind(function() {
-            Comments.fetchAllComments(this.get("assignment"), function (allComments) {
-                this.unusedComments = new Comments();
-
-                allComments.each(_.bind(function (comment) {
-                    var found = false;
-                    this.comments.each(function(gradeReportComment) {
-                        var myComment = gradeReportComment.get("comment");
-                        if (myComment.id === comment.id) {
-                            found = true;
-                            gradeReportComment.set("comment", comment);
-                        }
-                    });
-                    if (found) return;
-
-                    if (comment.get("isPublic")) {
-                        this.unusedComments.add(comment);
-                    }
-                }, this));
-
-                this.unusedComments.each(_.bind(function(comment) {
-                    var gradeReportComment = new GradeReportComment({
-                        assignment: this.get("assignment"),
-                        gradedBySunetid: this.get("gradedBySunetid"),
-                        gradedForSunetid: this.get("gradedForSunetid"),
-                        gradeReport: this,
-                        comment: comment,
-                        value: ""
-                    });
-                    this.comments.add(gradeReportComment);
-                }, this));
-
-                this.comments.sort();
-
-                if (callback) {
-                    callback.call(context);
-                }
-
-//                var count = this.comments.length;
-//
-//                if (count === 0) {
-//                    if (callback) {
-//                        callback.call(context);
-//                    }
-//                    return;
-//                }
-//
-//                this.comments.each(_.bind(function(gradeReportComment) {
-//                    var comment = gradeReportComment.get("comment");
-//                    console.log(comment, comment.toJSON(), comment.toJSON().objectId);
-//                    comment.fetch().then(_.bind(function(){
-//                        count--;
-//                        if (count === 0) {
-//                            if (callback) {
-//                                callback.call(context);
-//                            }
-//                        }
-//                    }, this), function(error) {
-//                        alert("Error: " + error.code + " " + error.message);
-//                    });
-//                }, this));
-
-            }, this);
-
-        }, this), function(error) {
-            alert("Error: " + error.code + " " + error.message);
-        });
     }
 
 }, {
     // Class methods
+
+    fetchGradeReports: function (equalTo, callback, context) {
+        $(".loading-alert").show();
+
+        var gradeReports = new GradeReports();
+        var query = new Parse.Query(GradeReport);
+        _.each(equalTo, function(filter) {
+            query.equalTo(filter.key, filter.value);
+        });
+        query.ascending("gradedBySunetid");
+        gradeReports.query = query;
+
+        var gradeReportComments = new GradeReportComments();
+        var gradeReportCommentQuery = new Parse.Query(GradeReportComment);
+        gradeReportCommentQuery.matchesQuery("gradeReport", query);
+        gradeReportCommentQuery.include("comment");
+        gradeReportComments.query = gradeReportCommentQuery;
+
+        var comments = new Comments();
+        var commentQuery = new Parse.Query(Comment);
+        var assignment = _.findWhere(equalTo, {key: "assignment"});
+        if (assignment) {
+            commentQuery.equalTo("assignment", assignment);
+        }
+        commentQuery.query = query;
+
+        gradeReports.fetch().then(_.bind(function () {
+            this.populateGradeReportsWithGradeReportComments(gradeReports, gradeReportComments, comments, callback, context);
+        }, this), function (error) {
+            alert("Error: " + error.code + " " + error.message);
+        });
+
+        gradeReportComments.fetch().then(_.bind(function() {
+            this.populateGradeReportsWithGradeReportComments(gradeReports, gradeReportComments, comments, callback, context);
+        }, this), function (error) {
+            alert("Error: " + error.code + " " + error.message);
+        });
+
+        comments.fetch().then(_.bind(function() {
+            this.populateGradeReportsWithGradeReportComments(gradeReports, gradeReportComments, comments, callback, context);
+        }, this), function (error) {
+            alert("Error: " + error.code + " " + error.message);
+        });
+    },
+
+    populateGradeReportsWithGradeReportComments: function(gradeReports, gradeReportComments, comments, callback, context) {
+        if (gradeReports.length == 0) return;
+        if (gradeReportComments.length == 0) return;
+        if (comments.length == 0) return;
+
+        console.log("populateGradeReportsWithGradeReportComments");
+        gradeReports.each(function(gradeReport) {
+            var commentsForGradeReport = gradeReportComments.filter(function(gradeReportComment) {
+                return gradeReportComment.get("gradeReport").id === gradeReport.id;
+            });
+
+            gradeReport.comments = new GradeReportComments();
+            _.each(commentsForGradeReport, function(gradeReportComment) {
+                gradeReport.comments.add(gradeReportComment);
+            });
+
+            comments.each(function(comment) {
+                var isUsed = false;
+                for (var i = 0; i < gradeReport.comments.length; i++) {
+                    var gradeReportComment = gradeReport.comments.at(i);
+                    if (gradeReportComment.get("comment").id === comment.id) {
+                        isUsed = true;
+                        break;
+                    }
+                }
+                if (isUsed) return;
+
+                var gradeReportComment = new GradeReportComment({
+                    comment: comment,
+                    gradeReport: gradeReport,
+                    value: ""
+                });
+                gradeReport.comments.add(gradeReportComment);
+            });
+        });
+
+        $(".loading-alert").hide();
+        callback.call(context, gradeReports);
+    }
+
 });

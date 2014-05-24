@@ -88,36 +88,14 @@ SendEmailView = Parse.View.extend({
 
     initialize: function(args) {
         this.assignment = args.assignment;
-        this.fetchGradeReports();
-    },
 
-    fetchGradeReports: function () {
-        $(".loading-alert").show();
         this.gradeReports = new GradeReports();
-
-        var query = new Parse.Query(GradeReport);
-        query.equalTo("assignment", this.assignment);
-        this.gradeReports.query = query;
-
-        this.gradeReports.fetch().then(_.bind(function() {
-            var count = this.gradeReports.length;
-            if (count === 0) {
-                this.render();
-                $(".loading-alert").hide();
-            }
-
-            this.gradeReports.each(_.bind(function (gradeReport) {
-                gradeReport.fetchComments(function() {
-                    count--;
-                    if (count === 0) {
-                        this.render();
-                        $(".loading-alert").hide();
-                    }
-                }, this);
-            }, this));
-        }, this), function(error) {
-            alert("Error: " + error.code + " " + error.message);
-        });
+        GradeReport.fetchGradeReports([{ key: "assignment", value: this.assignment }], function(gradeReports) {
+            this.gradeReports = gradeReports;
+            console.log(gradeReports);
+            $(".loading-alert").hide();
+            this.render();
+        }, this);
     },
 
     render: function() {
