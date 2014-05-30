@@ -24,8 +24,6 @@ GradeReport = Parse.Object.extend("GradeReport", {
         var gradeReportCommentQuery = new Parse.Query(GradeReportComment);
         gradeReportCommentQuery.matchesQuery("gradeReport", query);
         gradeReportCommentQuery.include("comment");
-        gradeReportCommentQuery.limit(1000);
-        gradeReportComments.query = gradeReportCommentQuery;
 
         var comments = new Comments();
         var commentQuery = new Parse.Query(Comment);
@@ -34,6 +32,7 @@ GradeReport = Parse.Object.extend("GradeReport", {
             commentQuery.equalTo("assignment", assignment.value);
         }
         commentQuery.equalTo("isPublic", true);
+        commentQuery.limit(1000);
         comments.query = commentQuery;
 
         var isGradeReportFetchComplete = false;
@@ -48,13 +47,29 @@ GradeReport = Parse.Object.extend("GradeReport", {
             alert("Error: " + error.code + " " + error.message);
         });
 
-        gradeReportComments.fetch().then(_.bind(function() {
-            isGradeReportCommentFetchComplete = true;
-            if (isGradeReportFetchComplete && isCommentFetchComplete && isGradeReportCommentFetchComplete)
-                this.populateGradeReportsWithGradeReportComments(gradeReports, gradeReportComments, comments, callback, context);
-        }, this), function (error) {
-            alert("Error: " + error.code + " " + error.message);
-        });
+        var LIMIT = 1000; // 1000 is the max
+        gradeReportCommentQuery.limit(LIMIT);
+        var skip = 0;
+        var fetchGradeReportComments = _.bind(function() {
+            gradeReportCommentQuery.find().then(_.bind(function(response) {
+                console.log(response.length);
+                if (response.length === 0) {
+                    isGradeReportCommentFetchComplete = true;
+                    if (isGradeReportFetchComplete && isCommentFetchComplete && isGradeReportCommentFetchComplete)
+                        this.populateGradeReportsWithGradeReportComments(gradeReports, gradeReportComments, comments, callback, context);
+                    return;
+                }
+
+                gradeReportComments.add(response);
+                skip += LIMIT;
+                gradeReportCommentQuery.skip(skip);
+                fetchGradeReportComments();
+            }, this), function (error) {
+                alert("Error: " + error.code + " " + error.message);
+            });
+
+        }, this);
+        fetchGradeReportComments();
 
         comments.fetch().then(_.bind(function() {
             isCommentFetchComplete = true;
