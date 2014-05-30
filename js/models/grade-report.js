@@ -16,13 +16,15 @@ GradeReport = Parse.Object.extend("GradeReport", {
         _.each(equalTo, function(filter) {
             query.equalTo(filter.key, filter.value);
         });
-        query.ascending("gradedBySunetid");
+        query.ascending("gradedBySunetid,gradedForSunetid");
+        query.limit(1000);
         gradeReports.query = query;
 
         var gradeReportComments = new GradeReportComments();
         var gradeReportCommentQuery = new Parse.Query(GradeReportComment);
         gradeReportCommentQuery.matchesQuery("gradeReport", query);
         gradeReportCommentQuery.include("comment");
+        gradeReportCommentQuery.limit(1000);
         gradeReportComments.query = gradeReportCommentQuery;
 
         var comments = new Comments();
